@@ -3,7 +3,10 @@ import os
 import json
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "room_stock.db")
+if os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/room_stock.db"
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "room_stock.db")
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)

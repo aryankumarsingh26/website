@@ -7,10 +7,19 @@ load_dotenv(override=True)
 import supabase_service as db_service
 from db import init_db
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static"),
+    static_url_path="/static"
+)
 
-# Ensure local fallback DB is initialized
-init_db()
+# Ensure local fallback DB is initialized safely (including on read-only serverless)
+try:
+    init_db()
+except Exception as e:
+    print(f"[DB] init_db bypassed on serverless: {e}")
 
 # Security Guard: Block any access to sensitive files (.env, .git, .db, secrets)
 @app.before_request
