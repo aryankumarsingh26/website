@@ -327,9 +327,9 @@ def delete_item(item_id):
     return True
 
 # ------------------------------------------------------------------------------
-# SELL Action (Selling Maggi, Kurkure, Biscuits etc.)
+# SELL Action (Selling Maggi, Kurkure, Biscuits etc. with Net Profit Tracking)
 # ------------------------------------------------------------------------------
-def sell_item(item_id, amount, custom_sell_price, seller_id, seller_name, customer_notes="", total_cash_received=None):
+def sell_item(item_id, amount, custom_sell_price, seller_id, seller_name, customer_notes="", total_cash_received=None, custom_buy_price=None):
     amount = max(1, int(amount))
     
     # 1. Fetch current item
@@ -349,12 +349,12 @@ def sell_item(item_id, amount, custom_sell_price, seller_id, seller_name, custom
             item = dict(row)
 
     if not item:
-        return False, "Item not found in stock", 0, 0, 0.0
+        return False, "Item not found in stock", 0, 0, 0.0, 0.0
 
     unpacked = unpack_item(item)
     current_qty = unpacked["quantity"]
     if current_qty < amount:
-        return False, f"Not enough stock! Sirf {current_qty} {unpacked['unit']} bache hain.", 0, 0, 0.0
+        return False, f"Not enough stock! Sirf {current_qty} {unpacked['unit']} bache hain.", 0, 0, 0.0, 0.0
 
     new_qty = current_qty - amount
     
@@ -364,6 +364,11 @@ def sell_item(item_id, amount, custom_sell_price, seller_id, seller_name, custom
     else:
         effective_sell_price = float(custom_sell_price) if custom_sell_price and float(custom_sell_price) > 0 else unpacked["sell_price"]
         total_revenue = amount * effective_sell_price
+
+    # Profit Calculation: Cash Received - (Buy Cost * Quantity)
+    unit_buy_price = float(custom_buy_price) if (custom_buy_price is not None and str(custom_buy_price).strip() != "" and float(custom_buy_price) >= 0) else float(unpacked.get("buy_price", 0.0))
+    cost_basis = round(unit_buy_price * amount, 2)
+    profit = round(total_revenue - cost_basis, 2)
         
     new_sold = unpacked["total_sold"] + amount
 
@@ -376,7 +381,7 @@ def sell_item(item_id, amount, custom_sell_price, seller_id, seller_name, custom
         text=unpacked["display_notes"]
     )
 
-    log_note = f"{seller_name} sold {amount} {unpacked['unit']} of {unpacked['name']} (Cash Received: ₹{total_revenue:.2f})"
+    log_note = f"[PROFIT:{profit:.2f}] {seller_name} sold {amount} {unpacked['unit']} of {unpacked['name']} (Cash: ₹{total_revenue:.2f}, Profit: ₹{profit:.2f})"
     if customer_notes:
         log_note += f" - {customer_notes}"
 
@@ -411,10 +416,10 @@ def sell_item(item_id, amount, custom_sell_price, seller_id, seller_name, custom
                         "added_by": f"Restock Alert ({unpacked['owner_name']})"
                     }).execute()
 
-            return True, None, new_qty, amount, total_revenue
+            return True, None, new_qty, amount, total_revenue, profit
         except Exception as e:
             print(f"Supabase sell_item error: {e}")
-            return False, str(e), 0, 0, 0.0
+            return False, str(e), 0, 0, 0.0, 0.0
 
     # SQLite fallback
     conn = sqlite_db.get_connection()
@@ -434,7 +439,7 @@ def sell_item(item_id, amount, custom_sell_price, seller_id, seller_name, custom
 
     conn.commit()
     conn.close()
-    return True, None, new_qty, amount, total_revenue
+    return True, None, new_qty, amount, total_revenue, profit
 
 # ------------------------------------------------------------------------------
 # RESTOCK Action (Bringing fresh stock from shop)
@@ -606,7 +611,7 @@ def adjust_stock(item_id, delta, user_id=1, user_name="Partner"):
     return True, None, new_qty
 
 # ------------------------------------------------------------------------------
-# Dashboard Business Stats
+# Dashboard Business Stats & Individual Partner Profit Tracking
 # ------------------------------------------------------------------------------
 def get_stats():
     all_items = get_items()
@@ -618,26 +623,66 @@ def get_stats():
 
     low_stock_count = len([i for i in all_items if i["quantity"] <= i["low_stock_threshold"]])
 
-    # Sales & Revenue calculations from activity_log
-    activity = get_activity(limit=100)
-    sales = [a for a in activity if a.get("action_type") == "sell"]
+    # Fetch all sales from activity_log
+    sales = []
+    if IS_SUPABASE_ENABLED:
+        try:
+            res = supabase_client.table("activity_log").select("*").eq("action_type", "sell").order("id", desc=True).limit(500).execute()
+            sales = res.data or []
+        except Exception as e:
+            print(f"Supabase get_sales error: {e}")
+            activity = get_activity(limit=200)
+            sales = [a for a in activity if a.get("action_type") == "sell"]
+    else:
+        conn = sqlite_db.get_connection()
+        rows = conn.execute("SELECT * FROM activity_log WHERE action_type = 'sell' ORDER BY id DESC LIMIT 500").fetchall()
+        conn.close()
+        sales = [dict(r) for r in rows]
+
     total_revenue = sum(float(s.get("cost", 0.0)) for s in sales)
     total_items_sold = sum(abs(int(s.get("quantity_change", 0))) for s in sales)
+    total_profit = 0.0
 
-    # Sales by Partner
+    # Sales & Profit breakdown by individual partner
     partner_sales = {
-        "Aryan": {"sold": 0, "revenue": 0.0},
-        "Vinay": {"sold": 0, "revenue": 0.0},
-        "Divyan": {"sold": 0, "revenue": 0.0}
+        "Aryan": {"sold": 0, "revenue": 0.0, "profit": 0.0},
+        "Vinay": {"sold": 0, "revenue": 0.0, "profit": 0.0},
+        "Divyan": {"sold": 0, "revenue": 0.0, "profit": 0.0}
     }
+
     for s in sales:
-        u = s.get("user_name", "Aryan")
+        raw_user = (s.get("user_name") or "Aryan").strip()
+        # Normalize partner name casing
+        norm_user = "Aryan"
+        for p in ["Aryan", "Vinay", "Divyan"]:
+            if raw_user.lower() == p.lower():
+                norm_user = p
+                break
+        else:
+            norm_user = raw_user
+
         qty = abs(int(s.get("quantity_change", 0)))
         rev = float(s.get("cost", 0.0))
-        if u not in partner_sales:
-            partner_sales[u] = {"sold": 0, "revenue": 0.0}
-        partner_sales[u]["sold"] += qty
-        partner_sales[u]["revenue"] += rev
+        note = s.get("notes") or ""
+
+        # Extract tagged profit: [PROFIT:X.XX]
+        profit = 0.0
+        if "[PROFIT:" in note:
+            try:
+                p_str = note.split("[PROFIT:")[1].split("]")[0]
+                profit = float(p_str)
+            except Exception:
+                profit = 0.0
+
+        if norm_user not in partner_sales:
+            partner_sales[norm_user] = {"sold": 0, "revenue": 0.0, "profit": 0.0}
+
+        partner_sales[norm_user]["sold"] += qty
+        partner_sales[norm_user]["revenue"] = round(partner_sales[norm_user]["revenue"] + rev, 2)
+        partner_sales[norm_user]["profit"] = round(partner_sales[norm_user]["profit"] + profit, 2)
+        total_profit += profit
+
+    total_profit = round(total_profit, 2)
 
     return {
         "total_stock": total_stock,
@@ -647,6 +692,10 @@ def get_stats():
         "low_stock_count": low_stock_count,
         "total_revenue": round(total_revenue, 2),
         "total_items_sold": total_items_sold,
+        "total_profit": total_profit,
+        "aryan_profit": partner_sales.get("Aryan", {}).get("profit", 0.0),
+        "vinay_profit": partner_sales.get("Vinay", {}).get("profit", 0.0),
+        "divyan_profit": partner_sales.get("Divyan", {}).get("profit", 0.0),
         "partner_sales": partner_sales
     }
 

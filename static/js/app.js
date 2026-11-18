@@ -277,6 +277,27 @@ function renderStats() {
   if (aryanStock) aryanStock.textContent = state.stats.aryan_stock ?? 0;
   if (vinayStock) vinayStock.textContent = state.stats.vinay_stock ?? 0;
   if (divyanStock) divyanStock.textContent = state.stats.divyan_stock ?? 0;
+
+  // Individual Partner Profit Figures
+  const totalProfit = document.getElementById('statTotalProfit');
+  const aryanProfit = document.getElementById('statAryanProfit');
+  const vinayProfit = document.getElementById('statVinayProfit');
+  const divyanProfit = document.getElementById('statDivyanProfit');
+
+  if (totalProfit) totalProfit.textContent = `₹${(state.stats.total_profit ?? 0).toFixed(2)}`;
+  if (aryanProfit) aryanProfit.textContent = `₹${(state.stats.aryan_profit ?? 0).toFixed(2)}`;
+  if (vinayProfit) vinayProfit.textContent = `₹${(state.stats.vinay_profit ?? 0).toFixed(2)}`;
+  if (divyanProfit) divyanProfit.textContent = `₹${(state.stats.divyan_profit ?? 0).toFixed(2)}`;
+
+  // Sold count sub-badges
+  const partnerSales = state.stats.partner_sales || {};
+  const aryanBadge = document.getElementById('statAryanSoldBadge');
+  const vinayBadge = document.getElementById('statVinaySoldBadge');
+  const divyanBadge = document.getElementById('statDivyanSoldBadge');
+
+  if (aryanBadge) aryanBadge.textContent = `${partnerSales.Aryan?.sold || 0} sold`;
+  if (vinayBadge) vinayBadge.textContent = `${partnerSales.Vinay?.sold || 0} sold`;
+  if (divyanBadge) divyanBadge.textContent = `${partnerSales.Divyan?.sold || 0} sold`;
 }
 
 // ------------------------------------------------------------------------------
@@ -353,10 +374,18 @@ function renderItemsGrid() {
             }
           </div>
 
-          <!-- Pricing Info -->
-          <div class="mt-2.5 p-2 bg-zinc-800/60 rounded-xl border border-zinc-800 text-xs flex items-center justify-between">
-            <span class="text-zinc-400 font-medium">Item Price:</span>
-            <span class="text-emerald-400 font-extrabold text-sm">₹${item.sell_price || item.buy_price || 0}</span>
+          <!-- Pricing Info with Profit Margin -->
+          <div class="mt-2.5 p-2 bg-zinc-800/60 rounded-xl border border-zinc-800 text-xs space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="text-zinc-400 font-medium">Bikri Rate (Sell):</span>
+              <span class="text-emerald-400 font-extrabold text-sm">₹${item.sell_price || item.buy_price || 0}</span>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-zinc-400">
+              <span>Kharid: ₹${item.buy_price || 0}</span>
+              <span class="${profitPerUnit > 0 ? 'text-emerald-400 font-bold' : 'text-zinc-400'}">
+                Munafa: +₹${profitPerUnit.toFixed(1)}/pkt
+              </span>
+            </div>
           </div>
 
           ${item.display_notes ? `<p class="mt-2 text-[11px] text-zinc-500 italic truncate">📍 ${escapeHtml(item.display_notes)}</p>` : ''}
@@ -364,9 +393,9 @@ function renderItemsGrid() {
 
         <!-- Action Buttons: SELL & RESTOCK / QUICK CONTROLS -->
         <div class="mt-4 pt-3 border-t border-zinc-800 space-y-2">
-          <!-- Primary: Becho Button (Opens modal with custom cash input) -->
-          <button onclick="openSellModal(${item.id}, '${escapeHtml(item.name)}', ${item.sell_price || 14})" class="w-full py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black text-xs font-black rounded-xl transition shadow-sm active:scale-95 flex items-center justify-center gap-1.5 ${isOut ? 'opacity-40 cursor-not-allowed' : ''}" ${isOut ? 'disabled' : ''}>
-            <span class="text-sm">💰</span> Becho (Sell & Cash Record)
+          <!-- Primary: Becho Button (Opens modal with live profit & custom cash input) -->
+          <button onclick="openSellModal(${item.id}, '${escapeHtml(item.name)}', ${item.sell_price || 14}, ${item.buy_price || 0}, '${escapeHtml(item.owner_name || 'Aryan')}')" class="w-full py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black text-xs font-black rounded-xl transition shadow-sm active:scale-95 flex items-center justify-center gap-1.5 ${isOut ? 'opacity-40 cursor-not-allowed' : ''}" ${isOut ? 'disabled' : ''}>
+            <span class="text-sm">💰</span> Becho & Profit Add Karo
           </button>
 
           <!-- Secondary Row: -1, +1, Restock, Delete -->
@@ -582,18 +611,34 @@ function renderHisabKitab() {
 // ------------------------------------------------------------------------------
 // Modal Openers & Actions
 // ------------------------------------------------------------------------------
-function openSellModal(itemId, itemName, defaultSellPrice = 14) {
+function openSellModal(itemId, itemName, defaultSellPrice = 14, buyPrice = 0, ownerName = 'Aryan') {
   document.getElementById('sellItemId').value = itemId;
   document.getElementById('sellModalTitle').textContent = `Becho: ${itemName}`;
   document.getElementById('sellAmount').value = 1;
   document.getElementById('sellPricePerUnit').value = defaultSellPrice;
+  
+  const buyPriceEl = document.getElementById('sellBuyPrice');
+  if (buyPriceEl) buyPriceEl.value = buyPrice;
 
-  // Auto-calculated default cash received (can be freely edited by user)
+  // Auto-calculated default cash received
   const totalInput = document.getElementById('sellTotalReceived');
   if (totalInput) totalInput.value = (1 * defaultSellPrice).toFixed(2);
 
   document.getElementById('sellNotes').value = '';
   populateUserSelects();
+
+  // Pre-select seller to match item owner
+  const userSel = document.getElementById('sellUserSelect');
+  if (userSel) {
+    for (let i = 0; i < userSel.options.length; i++) {
+      if (userSel.options[i].text.toLowerCase().includes(ownerName.toLowerCase())) {
+        userSel.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  updateSellProfitDisplay();
   openModal('sellModal');
 }
 
@@ -603,6 +648,41 @@ function updateAutoSellCash() {
   const totalInput = document.getElementById('sellTotalReceived');
   if (totalInput) {
     totalInput.value = (qty * price).toFixed(2);
+  }
+  updateSellProfitDisplay();
+}
+
+function updateSellProfitDisplay() {
+  const qty = parseInt(document.getElementById('sellAmount')?.value || 1, 10);
+  const buyPrice = parseFloat(document.getElementById('sellBuyPrice')?.value || 0);
+  const cashReceived = parseFloat(document.getElementById('sellTotalReceived')?.value || 0);
+  const costBasis = qty * buyPrice;
+  const profit = cashReceived - costBasis;
+
+  const profitEl = document.getElementById('sellLiveProfitDisplay');
+  const formulaEl = document.getElementById('sellProfitFormula');
+  if (profitEl) {
+    if (profit >= 0) {
+      profitEl.textContent = `+₹${profit.toFixed(2)}`;
+      profitEl.className = 'text-xl font-black text-emerald-300';
+    } else {
+      profitEl.textContent = `-₹${Math.abs(profit).toFixed(2)}`;
+      profitEl.className = 'text-xl font-black text-red-400';
+    }
+  }
+  if (formulaEl) {
+    formulaEl.textContent = `(Cash ₹${cashReceived.toFixed(1)} - Kharid ₹${costBasis.toFixed(1)})`;
+  }
+}
+
+function updateAddItemProfitPreview() {
+  const buy = parseFloat(document.getElementById('newItemBuyPrice')?.value || 0);
+  const sell = parseFloat(document.getElementById('newItemSellPrice')?.value || 0);
+  const diff = sell - buy;
+  const valEl = document.getElementById('addItemProfitValue');
+  if (valEl) {
+    valEl.textContent = `${diff >= 0 ? '+' : ''}₹${diff.toFixed(2)}`;
+    valEl.className = diff >= 0 ? 'font-extrabold text-emerald-400' : 'font-extrabold text-red-400';
   }
 }
 
@@ -695,17 +775,25 @@ function setupEventListeners() {
   }
   document.addEventListener('click', () => toggleUserDropdown(false));
 
-  // Add Item Open Button (Simple 3 Fields: Name, Price, Quantity)
+  // Add Item Open Button (Name, Kharid & Bikri Rate with Profit Preview, Quantity)
   document.getElementById('openAddItemBtn')?.addEventListener('click', () => {
     document.getElementById('newItemName').value = '';
-    document.getElementById('newItemPrice').value = '';
+    const buyInput = document.getElementById('newItemBuyPrice');
+    const sellInput = document.getElementById('newItemSellPrice');
+    if (buyInput) buyInput.value = '';
+    if (sellInput) sellInput.value = '';
     document.getElementById('newItemQuantity').value = '';
+    updateAddItemProfitPreview();
     const badge = document.getElementById('addItemOwnerBadge');
     if (badge && state.activeUser) {
       badge.textContent = `Adding to: ${state.activeUser.avatar} ${state.activeUser.name} Ka Stock`;
     }
     openModal('addItemModal');
   });
+
+  // Live profit calculation listeners for Add Item Form
+  document.getElementById('newItemBuyPrice')?.addEventListener('input', updateAddItemProfitPreview);
+  document.getElementById('newItemSellPrice')?.addEventListener('input', updateAddItemProfitPreview);
 
   // Search & Category Filters
   document.getElementById('inventorySearch')?.addEventListener('input', debounce(loadItems, 300));
@@ -721,11 +809,12 @@ function setupEventListeners() {
     });
   });
 
-  // Form: Add Custom Item (Only Name, Price, Quantity)
+  // Form: Add Custom Item (Name, Buy & Sell Price, Quantity)
   document.getElementById('addItemForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('newItemName').value.trim();
-    const price = parseFloat(document.getElementById('newItemPrice').value || 0);
+    const buyPrice = parseFloat(document.getElementById('newItemBuyPrice')?.value || 0);
+    const sellPrice = parseFloat(document.getElementById('newItemSellPrice')?.value || buyPrice);
     const quantity = parseInt(document.getElementById('newItemQuantity').value, 10);
 
     const owner_name = state.activeUser ? state.activeUser.name : 'Aryan';
@@ -755,8 +844,8 @@ function setupEventListeners() {
           quantity,
           owner_name,
           owner_id,
-          buy_price: price,
-          sell_price: price,
+          buy_price: buyPrice,
+          sell_price: sellPrice,
           notes: `${owner_name} ka stock`,
           low_stock_threshold: 3
         })
@@ -765,16 +854,19 @@ function setupEventListeners() {
       if (!res.ok) throw new Error(data.error || 'Failed to add item');
 
       closeAllModals();
-      showToast(`🎉 "${name}" (${quantity} pkts @ ₹${price}) added to ${owner_name}'s stock!`, 'success');
+      const perPktProfit = sellPrice - buyPrice;
+      showToast(`🎉 "${name}" (${quantity} pkts @ Kharid: ₹${buyPrice}, Bikri: ₹${sellPrice}, Profit: +₹${perPktProfit.toFixed(1)}) added to ${owner_name}'s stock!`, 'success');
       await refreshAllData();
     } catch (err) {
       showToast(err.message, 'error');
     }
   });
 
-  // Form: Sell Item (Bikri with Custom Cash Received)
+  // Form: Sell Item (Bikri with Custom Cash Received & Live Profit Calculation)
   document.getElementById('sellAmount')?.addEventListener('input', updateAutoSellCash);
   document.getElementById('sellPricePerUnit')?.addEventListener('input', updateAutoSellCash);
+  document.getElementById('sellBuyPrice')?.addEventListener('input', updateSellProfitDisplay);
+  document.getElementById('sellTotalReceived')?.addEventListener('input', updateSellProfitDisplay);
 
   document.querySelectorAll('#sellModal .qty-btn-minus').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -801,6 +893,7 @@ function setupEventListeners() {
     const itemId = document.getElementById('sellItemId').value;
     const amount = parseInt(document.getElementById('sellAmount').value, 10);
     const sellPrice = parseFloat(document.getElementById('sellPricePerUnit').value || 0);
+    const buyPrice = parseFloat(document.getElementById('sellBuyPrice')?.value || 0);
     const totalCashReceived = parseFloat(document.getElementById('sellTotalReceived').value || 0);
     const userSel = document.getElementById('sellUserSelect');
     const sellerId = parseInt(userSel.value, 10);
@@ -814,6 +907,7 @@ function setupEventListeners() {
         body: JSON.stringify({
           amount,
           sell_price: sellPrice,
+          buy_price: buyPrice,
           total_cash_received: totalCashReceived,
           seller_id: sellerId,
           seller_name: sellerName,
@@ -824,7 +918,8 @@ function setupEventListeners() {
       if (!res.ok) throw new Error(data.error || 'Failed to record sale');
 
       closeAllModals();
-      showToast(`💵 Sale Recorded! Cash Received: ₹${totalCashReceived.toFixed(2)} (${data.new_quantity} left) 🎉`, 'success');
+      const earnedProfit = data.profit !== undefined ? data.profit : (totalCashReceived - (amount * buyPrice));
+      showToast(`💵 Sale Recorded! Cash: ₹${totalCashReceived.toFixed(2)} | Profit: +₹${earnedProfit.toFixed(2)} added to ${sellerName}! 🎉`, 'success');
       await refreshAllData();
     } catch (err) {
       showToast(err.message, 'error');

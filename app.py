@@ -141,20 +141,22 @@ def delete_item(item_id):
     return jsonify({"success": success})
 
 # ------------------------------------------------------------------------------
-# SELL Action (Selling Maggi, Kurkure, Biscuits etc.)
+# SELL Action (Selling Maggi, Kurkure, Biscuits etc. with Profit Tracking)
 # ------------------------------------------------------------------------------
 @app.route("/api/items/<int:item_id>/sell", methods=["POST"])
 def sell_item(item_id):
     data = request.json or {}
     amount = int(data.get("amount", 1))
     sell_price = data.get("sell_price")
+    buy_price = data.get("buy_price")
     total_cash_received = data.get("total_cash_received")
     seller_name = data.get("seller_name", "Partner").strip()
     seller_id = data.get("seller_id", 1)
     notes = data.get("notes", "").strip()
 
-    success, error, new_qty, sold_qty, revenue = db_service.sell_item(
-        item_id, amount, sell_price, seller_id, seller_name, notes, total_cash_received=total_cash_received
+    success, error, new_qty, sold_qty, revenue, profit = db_service.sell_item(
+        item_id, amount, sell_price, seller_id, seller_name, notes,
+        total_cash_received=total_cash_received, custom_buy_price=buy_price
     )
     if not success:
         return jsonify({"error": error}), 400
@@ -163,7 +165,8 @@ def sell_item(item_id):
         "success": True,
         "new_quantity": new_qty,
         "sold_quantity": sold_qty,
-        "revenue": revenue
+        "revenue": revenue,
+        "profit": profit
     })
 
 # ------------------------------------------------------------------------------

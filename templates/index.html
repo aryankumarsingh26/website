@@ -146,6 +146,70 @@
 
     </div>
 
+    <!-- =========================================================================
+         Individual Partner Profit Tracker & Kamai Overview
+    ========================================================================== -->
+    <div class="bg-zinc-900/90 border border-emerald-500/30 rounded-2xl p-3.5 sm:p-4 shadow-xl">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl sm:text-2xl">💰</span>
+          <div>
+            <h3 class="text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+              <span>Partner Profit Tracker</span>
+              <span class="text-[9px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">Live Munafa</span>
+            </h3>
+            <p class="text-[10px] sm:text-xs text-zinc-400">Har bikri ke baad ka net profit (Cash Received - Kharid Cost)</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] text-zinc-400 block sm:inline">Dukaan Total Profit:</span>
+          <span id="statTotalProfit" class="text-base sm:text-lg font-black text-emerald-400 sm:ml-1.5">₹0.00</span>
+        </div>
+      </div>
+
+      <!-- 3 Individual Partner Profit Badges -->
+      <div class="grid grid-cols-3 gap-2 sm:gap-3">
+        <!-- Aryan Profit -->
+        <div class="bg-zinc-800/80 border border-red-500/30 rounded-xl p-2.5 sm:p-3 flex flex-col justify-between hover:border-red-500/60 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] sm:text-xs font-bold text-red-400 flex items-center gap-1 truncate">
+              <span>🦁</span> <span>Aryan</span>
+            </span>
+            <span class="text-[9px] font-bold text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-700/50 hidden sm:inline" id="statAryanSoldBadge">0 sold</span>
+          </div>
+          <div class="mt-1.5">
+            <span id="statAryanProfit" class="text-base sm:text-xl font-black text-white">₹0.00</span>
+          </div>
+        </div>
+
+        <!-- Vinay Profit -->
+        <div class="bg-zinc-800/80 border border-blue-500/30 rounded-xl p-2.5 sm:p-3 flex flex-col justify-between hover:border-blue-500/60 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] sm:text-xs font-bold text-blue-400 flex items-center gap-1 truncate">
+              <span>💼</span> <span>Vinay</span>
+            </span>
+            <span class="text-[9px] font-bold text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-700/50 hidden sm:inline" id="statVinaySoldBadge">0 sold</span>
+          </div>
+          <div class="mt-1.5">
+            <span id="statVinayProfit" class="text-base sm:text-xl font-black text-white">₹0.00</span>
+          </div>
+        </div>
+
+        <!-- Divyan Profit -->
+        <div class="bg-zinc-800/80 border border-emerald-500/30 rounded-xl p-2.5 sm:p-3 flex flex-col justify-between hover:border-emerald-500/60 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] sm:text-xs font-bold text-emerald-400 flex items-center gap-1 truncate">
+              <span>🚀</span> <span>Divyan</span>
+            </span>
+            <span class="text-[9px] font-bold text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-700/50 hidden sm:inline" id="statDivyanSoldBadge">0 sold</span>
+          </div>
+          <div class="mt-1.5">
+            <span id="statDivyanProfit" class="text-base sm:text-xl font-black text-white">₹0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Desktop Navigation Tabs -->
     <div class="hidden sm:flex items-center gap-2 overflow-x-auto pb-2 border-b border-zinc-800 no-scrollbar">
       <button class="tab-btn active flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition whitespace-nowrap" data-tab="tab-inventory">
@@ -364,7 +428,7 @@
        MODALS
   ========================================================================== -->
 
-  <!-- 1. Add Custom Item Modal (Ultra Simple: Name, Price, Quantity only) -->
+  <!-- 1. Add Custom Item Modal (Item Name, Kharid & Bikri Rate with Profit Preview, Quantity) -->
   <div id="addItemModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
     <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl relative animate-in">
       <button class="modal-close-btn absolute top-3.5 right-3.5 text-zinc-400 hover:text-white text-lg p-1">
@@ -384,10 +448,22 @@
           <input type="text" id="newItemName" placeholder="Eg: Maggi, Kurkure, Yippee, Bourbon" required class="w-full bg-zinc-800 text-sm px-3.5 py-2.5 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500 font-semibold placeholder-zinc-500" />
         </div>
         
-        <!-- 2. Item Price -->
-        <div>
-          <label class="block text-xs font-semibold text-zinc-300 mb-1">Item Price (₹) *</label>
-          <input type="number" step="0.5" min="0" id="newItemPrice" placeholder="Eg: 14" required class="w-full bg-zinc-800 text-sm px-3.5 py-2.5 rounded-xl border border-zinc-700 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 placeholder-zinc-500" />
+        <!-- 2. Kharid & Bikri Rates (Profit Tracking) -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Kharid Rate (Buy ₹) *</label>
+            <input type="number" step="0.5" min="0" id="newItemBuyPrice" placeholder="Eg: 10" required class="w-full bg-zinc-800 text-sm px-3 py-2 rounded-xl border border-zinc-700 text-amber-400 font-bold focus:outline-none focus:border-amber-500 placeholder-zinc-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Bikri Rate (Sell ₹) *</label>
+            <input type="number" step="0.5" min="0" id="newItemSellPrice" placeholder="Eg: 14" required class="w-full bg-zinc-800 text-sm px-3 py-2 rounded-xl border border-zinc-700 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 placeholder-zinc-500" />
+          </div>
+        </div>
+
+        <!-- Live Profit Badge -->
+        <div id="addItemProfitPreview" class="text-[11px] text-emerald-400 font-semibold px-2.5 py-1.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 flex items-center justify-between">
+          <span>💚 Per Packet Expected Profit:</span>
+          <span id="addItemProfitValue" class="font-extrabold">+₹0.00</span>
         </div>
 
         <!-- 3. Item Quantity -->
@@ -403,7 +479,7 @@
     </div>
   </div>
 
-  <!-- 2. SELL Modal (Bikri & Custom Cash Received) -->
+  <!-- 2. SELL Modal (Bikri, Profit Preview & Custom Cash Received) -->
   <div id="sellModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
     <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative animate-in max-h-[90vh] overflow-y-auto">
       <button class="modal-close-btn absolute top-3.5 right-3.5 text-zinc-400 hover:text-white text-lg p-1">
@@ -413,7 +489,7 @@
         <span class="text-2xl sm:text-3xl">💰</span>
         <div>
           <h3 id="sellModalTitle" class="text-base sm:text-lg font-bold text-white">Item Becho (Sell)</h3>
-          <p class="text-[11px] text-zinc-400">Stock minus hoga aur jitna cash mila wo record ho jayega</p>
+          <p class="text-[11px] text-zinc-400">Stock minus hoga aur seller ke hisab mein profit add ho jayega</p>
         </div>
       </div>
       <form id="sellForm" class="space-y-3.5">
@@ -430,25 +506,30 @@
 
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-xs font-semibold text-zinc-300 mb-1">Item Rate (₹/pkt)</label>
+            <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Bikri Rate (Sell ₹/pkt)</label>
             <input type="number" step="0.5" id="sellPricePerUnit" required class="w-full bg-zinc-800 text-sm px-3 py-2 rounded-xl border border-zinc-700 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-zinc-300 mb-1">Kisne Becha? (Seller)</label>
-            <select id="sellUserSelect" class="w-full bg-zinc-800 text-xs sm:text-sm px-2.5 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500">
-              <!-- Dynamically populated with partners -->
-            </select>
+            <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Kharid Rate (Buy ₹/pkt)</label>
+            <input type="number" step="0.5" id="sellBuyPrice" required class="w-full bg-zinc-800 text-sm px-3 py-2 rounded-xl border border-zinc-700 text-amber-400 font-bold focus:outline-none focus:border-amber-500" />
           </div>
         </div>
 
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Kisne Becha? (Munafa Isko Milega)</label>
+          <select id="sellUserSelect" class="w-full bg-zinc-800 text-xs sm:text-sm px-2.5 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500">
+            <!-- Dynamically populated with partners -->
+          </select>
+        </div>
+
         <!-- Custom Editable Total Cash Received -->
-        <div class="p-3.5 bg-zinc-800/80 rounded-xl border border-emerald-500/40 space-y-1.5">
+        <div class="p-3 bg-zinc-800/80 rounded-xl border border-emerald-500/40 space-y-1.5">
           <div class="flex items-center justify-between">
             <label class="block text-xs font-black text-emerald-400 uppercase tracking-wider">
               Total Cash Received (₹) *
             </label>
             <span class="text-[10px] text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded-md border border-zinc-700 font-semibold">
-              ✏️ Khud se type karein
+              ✏️ Typed Cash
             </span>
           </div>
           <div class="relative">
@@ -460,12 +541,18 @@
               id="sellTotalReceived" 
               placeholder="0.00" 
               required 
-              class="w-full bg-zinc-900 text-emerald-400 text-2xl font-black pl-8 pr-3.5 py-2.5 rounded-xl border border-zinc-700 focus:border-emerald-400 focus:outline-none"
+              class="w-full bg-zinc-900 text-emerald-400 text-2xl font-black pl-8 pr-3.5 py-2 rounded-xl border border-zinc-700 focus:border-emerald-400 focus:outline-none"
             />
           </div>
-          <p class="text-[10px] text-zinc-400">
-            Aap apni marzi se yahan custom cash amount type kar sakte hain.
-          </p>
+        </div>
+
+        <!-- Live Net Profit Calculation Box -->
+        <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">🎉 Is Sale Par Net Profit:</span>
+            <span id="sellLiveProfitDisplay" class="text-xl font-black text-emerald-300">+₹0.00</span>
+          </div>
+          <span class="text-[11px] text-zinc-400 font-semibold" id="sellProfitFormula">(Cash - Kharid)</span>
         </div>
 
         <div>
@@ -474,7 +561,7 @@
         </div>
 
         <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-extrabold text-xs sm:text-sm shadow-md transition active:scale-98">
-          Confirm Sale & Cash Received 💵
+          Confirm Sale & Add Profit 💵
         </button>
       </form>
     </div>
