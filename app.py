@@ -37,17 +37,28 @@ def add_cors_headers(response):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return response
 
+import urllib.parse
+
 # WSGI Middleware to fix Vercel Serverless routing & PATH_INFO
 class VercelPathFixerMiddleware:
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        matched_path = environ.get("HTTP_X_MATCHED_PATH")
-        if matched_path:
-            environ["PATH_INFO"] = matched_path
-        elif environ.get("PATH_INFO") in ["/api/index", "/api/index.py", "/api"]:
+        # Extract query string to find __path forwarded by Vercel rewrite
+        query_string = environ.get("QUERY_STRING", "")
+        if "__path=" in query_string:
+            params = urllib.parse.parse_qs(query_string)
+            raw_path = params.get("__path", [""])[0]
+            cleaned_params = {k: v for k, v in params.items() if k != "__path"}
+            environ["QUERY_STRING"] = urllib.parse.urlencode(cleaned_params, doseq=True)
+            if raw_path.startswith("/"):
+                environ["PATH_INFO"] = raw_path
+            else:
+                environ["PATH_INFO"] = "/" + raw_path if raw_path else "/"
+        elif environ.get("PATH_INFO") in ["/api/index", "/api/index.py"]:
             environ["PATH_INFO"] = "/"
+
         return self.wsgi_app(environ, start_response)
 
 app.wsgi_app = VercelPathFixerMiddleware(app.wsgi_app)
@@ -56,8 +67,6 @@ app.wsgi_app = VercelPathFixerMiddleware(app.wsgi_app)
 # Frontend Page
 # ------------------------------------------------------------------------------
 @app.route("/")
-@app.route("/api/index")
-@app.route("/api/index.py")
 def index():
     return render_template("index.html")
 
