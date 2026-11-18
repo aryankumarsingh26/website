@@ -341,7 +341,7 @@ function renderItemsGrid() {
     const profitPerUnit = (item.sell_price > 0 && item.buy_price > 0) ? (item.sell_price - item.buy_price) : 0;
 
     return `
-      <div class="bg-zinc-900 border ${isMine ? 'border-amber-500/40' : 'border-zinc-800'} hover:border-zinc-700 rounded-2xl p-4 flex flex-col justify-between shadow-md card-hover-glow transition relative">
+      <div class="bg-zinc-900 border ${isMine ? 'border-amber-500/40' : 'border-zinc-800'} hover:border-zinc-700 rounded-2xl p-4 flex flex-col justify-between shadow-md card-hover-glow card-entry transition relative">
         ${isMine ? `<span class="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500 text-black shadow-sm uppercase tracking-wider">Aapka Stock</span>` : ''}
         
         <div>
@@ -847,6 +847,14 @@ function setupEventListeners() {
 
       closeAllModals();
       showToast(`🎉 "${name}" (${quantity} pkts @ Kharid: ₹${buyPrice}) added to ${owner_name}'s stock!`, 'success');
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 40,
+          spread: 55,
+          origin: { y: 0.7 },
+          colors: ['#f59e0b', '#fbbf24', '#10b981', '#3b82f6']
+        });
+      }
       await refreshAllData();
     } catch (err) {
       showToast(err.message, 'error');
@@ -911,6 +919,14 @@ function setupEventListeners() {
       closeAllModals();
       const earnedProfit = data.profit !== undefined ? data.profit : (totalCashReceived - (amount * buyPrice));
       showToast(`💵 Sale Recorded! Cash: ₹${totalCashReceived.toFixed(2)} | Profit: +₹${earnedProfit.toFixed(2)} added to ${sellerName}! 🎉`, 'success');
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 85,
+          spread: 75,
+          origin: { y: 0.6 },
+          colors: ['#10b981', '#34d399', '#f59e0b', '#3b82f6', '#ec4899', '#a855f7', '#fbbf24']
+        });
+      }
       await refreshAllData();
     } catch (err) {
       showToast(err.message, 'error');

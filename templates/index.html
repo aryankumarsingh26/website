@@ -15,6 +15,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Custom Mobile & Desktop CSS -->
   <link rel="stylesheet" href="/static/css/style.css">
+  <!-- Canvas Confetti for lively celebration effects -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   
   <script>
     tailwind.config = {
@@ -23,13 +25,36 @@
         extend: {
           fontFamily: {
             sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            zinc: {
+              950: '#111318', // canvas background
+              900: '#181b23', // card background
+              850: '#1e222d', // elevated surface
+              800: '#252935', // subcard / input
+              750: '#2d3342', // active pill
+              700: '#353c4d', // border
+              600: '#495267', // hover border
+              500: '#6b7692', // muted text
+              400: '#9aa5c0', // secondary text
+              300: '#c5cde2', // body text
+              200: '#e2e6f4', // heading text
+              100: '#f2f5fc'  // white text
+            }
           }
         }
       }
     }
   </script>
 </head>
-<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans antialiased selection:bg-amber-500 selection:text-black overflow-x-hidden">
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans antialiased selection:bg-amber-500 selection:text-black overflow-x-hidden relative">
+
+  <!-- Lively Ambient Glow Background Effects -->
+  <div class="bg-ambient-glow" aria-hidden="true">
+    <div class="ambient-orb-1"></div>
+    <div class="ambient-orb-2"></div>
+    <div class="ambient-orb-3"></div>
+  </div>
 
   <!-- =========================================================================
        Top Navigation Bar (Partners Switcher & Cloud Status)
@@ -100,7 +125,7 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
       
       <!-- Combined Total Stock -->
-      <div class="bg-gradient-to-br from-amber-500/20 via-zinc-900 to-zinc-900 border border-amber-500/40 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg">
+      <div class="bg-gradient-to-br from-amber-500/20 via-zinc-900 to-zinc-900 border border-amber-500/40 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg card-hover-glow transition">
         <div>
           <p class="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">Total Stock</p>
           <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
@@ -112,7 +137,7 @@
       </div>
 
       <!-- Aryan Stock -->
-      <div class="bg-zinc-900/90 border border-red-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-red-500/60 transition" onclick="filterByOwner('Aryan')">
+      <div class="bg-zinc-900/90 border border-red-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-red-500/60 card-hover-glow transition" onclick="filterByOwner('Aryan')">
         <div>
           <p class="text-[10px] sm:text-xs font-bold text-red-400 uppercase tracking-wider">🦁 Aryan Ka Stock</p>
           <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
@@ -123,7 +148,7 @@
       </div>
 
       <!-- Vinay Stock -->
-      <div class="bg-zinc-900/90 border border-blue-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-blue-500/60 transition" onclick="filterByOwner('Vinay')">
+      <div class="bg-zinc-900/90 border border-blue-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-blue-500/60 card-hover-glow transition" onclick="filterByOwner('Vinay')">
         <div>
           <p class="text-[10px] sm:text-xs font-bold text-blue-400 uppercase tracking-wider">💼 Vinay Ka Stock</p>
           <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
@@ -134,7 +159,7 @@
       </div>
 
       <!-- Divyan Stock -->
-      <div class="bg-zinc-900/90 border border-emerald-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-emerald-500/60 transition" onclick="filterByOwner('Divyan')">
+      <div class="bg-zinc-900/90 border border-emerald-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-emerald-500/60 card-hover-glow transition" onclick="filterByOwner('Divyan')">
         <div>
           <p class="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider">🚀 Divyan Ka Stock</p>
           <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
@@ -149,14 +174,20 @@
     <!-- =========================================================================
          Individual Partner Profit Tracker & Kamai Overview
     ========================================================================== -->
-    <div class="bg-zinc-900/90 border border-emerald-500/30 rounded-2xl p-3.5 sm:p-4 shadow-xl">
+    <div class="bg-zinc-900/90 border border-emerald-500/30 rounded-2xl p-3.5 sm:p-4 shadow-xl card-hover-glow transition">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <span class="text-xl sm:text-2xl">💰</span>
           <div>
             <h3 class="text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center gap-1.5">
               <span>Partner Profit Tracker</span>
-              <span class="text-[9px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">Live Munafa</span>
+              <span class="inline-flex items-center gap-1.5 text-[9px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 shadow-sm">
+                <span class="relative flex h-1.5 w-1.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                Live Munafa
+              </span>
             </h3>
             <p class="text-[10px] sm:text-xs text-zinc-400">Har bikri ke baad ka net profit (Cash Received - Kharid Cost)</p>
           </div>
@@ -243,7 +274,7 @@
         </div>
 
         <!-- Big Add Custom Item Button -->
-        <button id="openAddItemBtn" class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-xs sm:text-sm shadow-md transition active:scale-95 shrink-0">
+        <button id="openAddItemBtn" class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-xs sm:text-sm shadow-md transition active:scale-95 shrink-0 btn-shimmer">
           <i class="fa-solid fa-plus text-sm"></i> + Naya Item Jodo (Custom Name & Qty)
         </button>
       </div>
@@ -481,7 +512,7 @@
           <input type="text" id="sellNotes" placeholder="Eg: Room 204 ke dost ne diya" class="w-full bg-zinc-800 text-xs sm:text-sm px-3 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500" />
         </div>
 
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-extrabold text-xs sm:text-sm shadow-md transition active:scale-98">
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-extrabold text-xs sm:text-sm shadow-md transition active:scale-98 btn-shimmer">
           Confirm Sale & Add Profit 💵
         </button>
       </form>
