@@ -121,7 +121,6 @@ async function refreshAllData() {
     loadStats(),
     loadItems(),
     loadShopping(),
-    loadExpenses(),
     loadActivity()
   ]);
 }
