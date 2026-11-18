@@ -266,16 +266,119 @@ function populateCategoryDropdowns() {
   }
 }
 
-function renderStats() {
-  const totalStock = document.getElementById('statTotalStock');
-  const aryanStock = document.getElementById('statAryanStock');
-  const vinayStock = document.getElementById('statVinayStock');
-  const divyanStock = document.getElementById('statDivyanStock');
+// ------------------------------------------------------------------------------
+// Animated Number Counter & Floating Badge Effects
+// ------------------------------------------------------------------------------
+function animateCounter(elementId, targetValue, prefix = '', suffix = '') {
+  const el = document.getElementById(elementId);
+  if (!el) return;
 
-  if (totalStock) totalStock.textContent = state.stats.total_stock ?? 0;
-  if (aryanStock) aryanStock.textContent = state.stats.aryan_stock ?? 0;
-  if (vinayStock) vinayStock.textContent = state.stats.vinay_stock ?? 0;
-  if (divyanStock) divyanStock.textContent = state.stats.divyan_stock ?? 0;
+  const currentStr = el.textContent.replace(/[^0-9.-]/g, '');
+  const startVal = parseFloat(currentStr) || 0;
+  const targetVal = parseFloat(targetValue) || 0;
+
+  if (startVal === targetVal && el.textContent.trim() !== '--') {
+    return;
+  }
+
+  // Trigger quantity spring punch effect
+  el.classList.remove('qty-punch');
+  void el.offsetWidth;
+  el.classList.add('qty-punch');
+
+  const duration = 400;
+  const startTime = performance.now();
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(startVal + (targetVal - startVal) * ease);
+    el.textContent = `${prefix}${current}${suffix}`;
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      el.textContent = `${prefix}${targetVal}${suffix}`;
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+function triggerFloatingBadge(event, text, isPositive) {
+  try {
+    const badge = document.createElement('div');
+    badge.className = `floating-delta-badge ${isPositive ? 'bg-emerald-500 text-black border border-emerald-300' : 'bg-red-500 text-white border border-red-300'}`;
+    badge.innerHTML = `<span>${isPositive ? '▲' : '▼'}</span> <span>${text}</span> <span>📦</span>`;
+    
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
+
+    if (event && event.clientX && event.clientY && event.clientX > 0 && event.clientY > 0) {
+      x = event.clientX;
+      y = event.clientY;
+    } else if (event && event.currentTarget) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      x = rect.left + rect.width / 2;
+      y = rect.top;
+    }
+
+    x = Math.max(50, Math.min(window.innerWidth - 50, x));
+    y = Math.max(40, y);
+
+    badge.style.left = `${x}px`;
+    badge.style.top = `${y}px`;
+    document.body.appendChild(badge);
+
+    setTimeout(() => {
+      if (badge && badge.parentNode) {
+        badge.parentNode.removeChild(badge);
+      }
+    }, 850);
+  } catch (e) {
+    console.error('Badge effect error:', e);
+  }
+}
+
+function renderStats() {
+  const total = state.stats.total_stock ?? 0;
+  const aryan = state.stats.aryan_stock ?? 0;
+  const vinay = state.stats.vinay_stock ?? 0;
+  const divyan = state.stats.divyan_stock ?? 0;
+
+  animateCounter('statTotalStock', total);
+  animateCounter('statAryanStock', aryan);
+  animateCounter('statVinayStock', vinay);
+  animateCounter('statDivyanStock', divyan);
+
+  // Update Lively Stock Distribution Bar
+  const totalStockNum = Math.max(total, 0);
+  const barAryan = document.getElementById('barAryanStock');
+  const barVinay = document.getElementById('barVinayStock');
+  const barDivyan = document.getElementById('barDivyanStock');
+  const distAryanPct = document.getElementById('distAryanPct');
+  const distVinayPct = document.getElementById('distVinayPct');
+  const distDivyanPct = document.getElementById('distDivyanPct');
+
+  if (totalStockNum > 0) {
+    const aryanPct = Math.round((aryan / totalStockNum) * 100);
+    const vinayPct = Math.round((vinay / totalStockNum) * 100);
+    const divyanPct = Math.max(0, 100 - aryanPct - vinayPct);
+
+    if (barAryan) barAryan.style.width = `${Math.max(aryanPct, aryan > 0 ? 6 : 0)}%`;
+    if (barVinay) barVinay.style.width = `${Math.max(vinayPct, vinay > 0 ? 6 : 0)}%`;
+    if (barDivyan) barDivyan.style.width = `${Math.max(divyanPct, divyan > 0 ? 6 : 0)}%`;
+
+    if (distAryanPct) distAryanPct.textContent = `${aryanPct}% (${aryan} pkts)`;
+    if (distVinayPct) distVinayPct.textContent = `${vinayPct}% (${vinay} pkts)`;
+    if (distDivyanPct) distDivyanPct.textContent = `${divyanPct}% (${divyan} pkts)`;
+  } else {
+    if (barAryan) barAryan.style.width = '33.3%';
+    if (barVinay) barVinay.style.width = '33.3%';
+    if (barDivyan) barDivyan.style.width = '33.4%';
+    if (distAryanPct) distAryanPct.textContent = '0%';
+    if (distVinayPct) distVinayPct.textContent = '0%';
+    if (distDivyanPct) distDivyanPct.textContent = '0%';
+  }
 
   // Individual Partner Profit Figures
   const totalProfit = document.getElementById('statTotalProfit');
@@ -300,7 +403,7 @@ function renderStats() {
 }
 
 // ------------------------------------------------------------------------------
-// Render Items Grid (Custom Items, Stock & Partner Ownership)
+// Render Items Grid (Custom Items, Stock & Partner Ownership with Lively Glow)
 // ------------------------------------------------------------------------------
 function renderItemsGrid() {
   const container = document.getElementById('itemsGrid');
@@ -325,29 +428,30 @@ function renderItemsGrid() {
   if (emptyState) emptyState.classList.add('hidden');
 
   const ownerColors = {
-    aryan: { badge: 'bg-red-500/20 text-red-400 border-red-500/30', icon: '🦁' },
-    vinay: { badge: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: '💼' },
-    divyan: { badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: '🚀' }
+    aryan: { badge: 'bg-red-500/20 text-red-400 border-red-500/30', icon: '🦁', glowClass: 'owner-glow-aryan', topStripe: 'from-red-500 to-rose-600' },
+    vinay: { badge: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: '💼', glowClass: 'owner-glow-vinay', topStripe: 'from-blue-500 to-cyan-500' },
+    divyan: { badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: '🚀', glowClass: 'owner-glow-divyan', topStripe: 'from-emerald-500 to-teal-400' }
   };
 
   container.innerHTML = filtered.map(item => {
     const isOut = item.quantity === 0;
     const isLow = item.quantity > 0 && item.quantity <= item.low_stock_threshold;
     const ownerKey = (item.owner_name || 'aryan').toLowerCase();
-    const ownerStyle = ownerColors[ownerKey] || { badge: 'bg-zinc-800 text-zinc-300 border-zinc-700', icon: '👤' };
+    const ownerStyle = ownerColors[ownerKey] || { badge: 'bg-zinc-800 text-zinc-300 border-zinc-700', icon: '👤', glowClass: '', topStripe: 'from-amber-500 to-orange-500' };
 
     const isMine = state.activeUser && (item.owner_name || '').toLowerCase() === state.activeUser.name.toLowerCase();
 
-    const profitPerUnit = (item.sell_price > 0 && item.buy_price > 0) ? (item.sell_price - item.buy_price) : 0;
-
     return `
-      <div class="bg-zinc-900 border ${isMine ? 'border-amber-500/40' : 'border-zinc-800'} hover:border-zinc-700 rounded-2xl p-4 flex flex-col justify-between shadow-md card-hover-glow card-entry transition relative">
-        ${isMine ? `<span class="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500 text-black shadow-sm uppercase tracking-wider">Aapka Stock</span>` : ''}
+      <div class="stock-card-wrapper ${ownerStyle.glowClass} ${isMine ? 'border-amber-500/50' : ''} ${isLow ? 'card-low-stock-pulse' : ''} ${isOut ? 'card-out-of-stock' : ''} rounded-2xl p-4 flex flex-col justify-between shadow-md card-entry transition relative">
+        <!-- Partner Top Accent Line -->
+        <div class="h-1 w-full absolute top-0 left-0 bg-gradient-to-r ${ownerStyle.topStripe}"></div>
+
+        ${isMine ? `<span class="absolute top-2 right-3 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500 text-black shadow-sm uppercase tracking-wider">Aapka Stock</span>` : ''}
         
-        <div>
+        <div class="pt-1">
           <!-- Owner & Category Badges -->
           <div class="flex items-center justify-between gap-1.5 mb-2">
-            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${ownerStyle.badge} flex items-center gap-1">
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${ownerStyle.badge} flex items-center gap-1 shadow-sm">
               <span>${ownerStyle.icon}</span> ${escapeHtml(item.owner_name || 'Common')}
             </span>
             <span class="text-[10px] font-semibold text-zinc-400 px-2 py-0.5 rounded-md bg-zinc-800 truncate max-w-[120px]">
@@ -358,23 +462,31 @@ function renderItemsGrid() {
           <!-- Item Name -->
           <h4 class="text-sm font-extrabold text-white mt-1 leading-snug">${escapeHtml(item.name)}</h4>
 
-          <!-- Stock Quantity Display -->
+          <!-- Stock Quantity Display with Spring Punch ID -->
           <div class="mt-3 flex items-baseline justify-between">
             <div class="flex items-baseline gap-1.5">
-              <span class="text-3xl font-black ${isOut ? 'text-red-500' : isLow ? 'text-amber-400' : 'text-white'}">${item.quantity}</span>
+              <span id="itemQty-${item.id}" class="text-3xl font-black ${isOut ? 'text-red-500' : isLow ? 'text-amber-400' : 'text-white'} transition-colors">${item.quantity}</span>
               <span class="text-xs text-zinc-400 font-bold">${escapeHtml(item.unit)}</span>
             </div>
 
             ${isOut 
               ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/40 pulse-low-stock">Khatam</span>`
               : isLow 
-              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/40">Sirf ${item.quantity} bache!</span>`
-              : `<span class="text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">In Stock</span>`
+              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1.5">
+                  <span class="relative flex h-1.5 w-1.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                  </span>
+                  Sirf ${item.quantity} bache!
+                 </span>`
+              : `<span class="text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span> In Stock
+                 </span>`
             }
           </div>
 
           <!-- Pricing Info: Kharid Rate Only -->
-          <div class="mt-2.5 p-2 bg-zinc-800/60 rounded-xl border border-zinc-800 text-xs flex items-center justify-between">
+          <div class="mt-2.5 p-2 bg-zinc-800/70 rounded-xl border border-zinc-800 text-xs flex items-center justify-between">
             <span class="text-zinc-400 font-medium">Kharid Rate (Cost):</span>
             <span class="text-amber-400 font-extrabold text-sm">₹${item.buy_price || 0} /pkt</span>
           </div>
@@ -384,17 +496,17 @@ function renderItemsGrid() {
 
         <!-- Action Buttons: SELL & RESTOCK / QUICK CONTROLS -->
         <div class="mt-4 pt-3 border-t border-zinc-800 space-y-2">
-          <!-- Primary: Becho Button (Opens modal to ask Bikri daam & calculate profit) -->
-          <button onclick="openSellModal(${item.id}, '${escapeHtml(item.name)}', ${item.buy_price || 0}, '${escapeHtml(item.owner_name || 'Aryan')}')" class="w-full py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black text-xs font-black rounded-xl transition shadow-sm active:scale-95 flex items-center justify-center gap-1.5 ${isOut ? 'opacity-40 cursor-not-allowed' : ''}" ${isOut ? 'disabled' : ''}>
+          <!-- Primary: Lively Becho Button (Opens modal to ask Bikri daam & calculate profit) -->
+          <button onclick="openSellModal(${item.id}, '${escapeHtml(item.name)}', ${item.buy_price || 0}, '${escapeHtml(item.owner_name || 'Aryan')}')" class="w-full py-2.5 px-3 btn-becho-lively text-black text-xs font-black rounded-xl transition shadow-md active:scale-95 flex items-center justify-center gap-1.5 btn-shimmer ${isOut ? 'opacity-40 cursor-not-allowed' : ''}" ${isOut ? 'disabled' : ''}>
             <span class="text-sm">💰</span> Becho (Bikri Daam Daalo)
           </button>
 
           <!-- Secondary Row: -1, +1, Restock, Delete -->
           <div class="flex items-center gap-1.5">
-            <button onclick="quickAdjustStock(${item.id}, -1, '${escapeHtml(item.name)}')" class="flex-1 py-1.5 px-2 bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 border border-zinc-700 text-zinc-300 text-xs font-bold rounded-xl transition active:scale-95 flex items-center justify-center gap-1 ${isOut ? 'opacity-40 cursor-not-allowed' : ''}" ${isOut ? 'disabled' : ''} title="1 packet kam karo">
+            <button onclick="quickAdjustStock(${item.id}, -1, '${escapeHtml(item.name)}', event)" class="flex-1 py-1.5 px-2 bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 border border-zinc-700 text-zinc-300 text-xs font-bold rounded-xl transition active:scale-95 flex items-center justify-center gap-1 ${isOut ? 'opacity-40 cursor-not-allowed' : ''}" ${isOut ? 'disabled' : ''} title="1 packet kam karo">
               - 1
             </button>
-            <button onclick="quickAdjustStock(${item.id}, 1, '${escapeHtml(item.name)}')" class="flex-1 py-1.5 px-2 bg-zinc-800 hover:bg-emerald-500/20 hover:text-emerald-400 border border-zinc-700 text-zinc-300 text-xs font-bold rounded-xl transition active:scale-95 flex items-center justify-center gap-1" title="1 packet badhao">
+            <button onclick="quickAdjustStock(${item.id}, 1, '${escapeHtml(item.name)}', event)" class="flex-1 py-1.5 px-2 bg-zinc-800 hover:bg-emerald-500/20 hover:text-emerald-400 border border-zinc-700 text-zinc-300 text-xs font-bold rounded-xl transition active:scale-95 flex items-center justify-center gap-1" title="1 packet badhao">
               + 1
             </button>
             <button onclick="openRestockModal(${item.id}, '${escapeHtml(item.name)}')" class="py-1.5 px-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-xs font-semibold rounded-xl transition active:scale-95 whitespace-nowrap" title="Dukaan se stock laya">
@@ -410,10 +522,21 @@ function renderItemsGrid() {
   }).join('');
 }
 
-// Quick Stock Adjustment (+1 or -1)
-async function quickAdjustStock(itemId, delta, itemName) {
+// Quick Stock Adjustment (+1 or -1) with Lively Bubble Pop
+async function quickAdjustStock(itemId, delta, itemName, event) {
   const userName = state.activeUser ? state.activeUser.name : 'Partner';
   const userId = state.activeUser ? state.activeUser.id : 1;
+
+  // Instant tactile visual feedback: trigger floating bubble badge
+  triggerFloatingBadge(event, delta > 0 ? `+${delta}` : `${delta}`, delta > 0);
+
+  // Trigger immediate spring punch on the item quantity span
+  const qtyEl = document.getElementById(`itemQty-${itemId}`);
+  if (qtyEl) {
+    qtyEl.classList.remove('qty-punch');
+    void qtyEl.offsetWidth;
+    qtyEl.classList.add('qty-punch');
+  }
 
   try {
     const res = await fetch(`/api/items/${itemId}/adjust-stock`, {
@@ -438,15 +561,28 @@ async function quickAdjustStock(itemId, delta, itemName) {
 
 function filterByOwner(owner) {
   state.activeOwnerFilter = owner;
+  
+  // Highlight Filter Pills
   document.querySelectorAll('.owner-pill').forEach(pill => {
-    if (pill.getAttribute('data-owner') === owner) {
+    const pillOwner = pill.getAttribute('data-owner');
+    if (pillOwner === owner) {
       pill.classList.remove('bg-zinc-800', 'text-zinc-300', 'border');
-      pill.classList.add('bg-amber-500', 'text-black');
+      pill.classList.add('bg-amber-500', 'text-black', 'active');
     } else {
       pill.classList.add('bg-zinc-800', 'text-zinc-300', 'border');
-      pill.classList.remove('bg-amber-500', 'text-black');
+      pill.classList.remove('bg-amber-500', 'text-black', 'active');
     }
   });
+
+  // Highlight Top Stock Cards with lively halo
+  const cardAryan = document.getElementById('stockCardAryan');
+  const cardVinay = document.getElementById('stockCardVinay');
+  const cardDivyan = document.getElementById('stockCardDivyan');
+
+  if (cardAryan) cardAryan.classList.toggle('active-stock-card', owner === 'Aryan');
+  if (cardVinay) cardVinay.classList.toggle('active-stock-card', owner === 'Vinay');
+  if (cardDivyan) cardDivyan.classList.toggle('active-stock-card', owner === 'Divyan');
+
   renderItemsGrid();
 }
 

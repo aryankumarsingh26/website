@@ -121,54 +121,91 @@
   ========================================================================== -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24 sm:pb-8">
 
-    <!-- Top Key Metrics Cards (Clean 4-Column Stock Overview) -->
+    <!-- Top Key Metrics Cards (Clean 4-Column Stock Overview with Lively Glow) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
       
       <!-- Combined Total Stock -->
-      <div class="bg-gradient-to-br from-amber-500/20 via-zinc-900 to-zinc-900 border border-amber-500/40 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg card-hover-glow transition">
+      <div id="stockCardTotal" class="partner-card-total rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer group" onclick="filterByOwner('all')" title="Sabhi Stock Dekho">
         <div>
-          <p class="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">Total Stock</p>
+          <div class="flex items-center gap-1.5">
+            <p class="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">Total Stock</p>
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+          </div>
           <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
             <span id="statTotalStock" class="text-2xl sm:text-3xl font-black text-white">--</span>
             <span class="text-[10px] sm:text-xs text-zinc-400 font-semibold">packets</span>
           </div>
         </div>
-        <div class="text-2xl sm:text-3xl">📦</div>
+        <div class="text-2xl sm:text-3xl transform transition-transform group-hover:scale-125 group-hover:rotate-6">📦</div>
       </div>
 
       <!-- Aryan Stock -->
-      <div class="bg-zinc-900/90 border border-red-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-red-500/60 card-hover-glow transition" onclick="filterByOwner('Aryan')">
+      <div id="stockCardAryan" class="partner-card-aryan rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer group" onclick="filterByOwner('Aryan')" title="Aryan Ka Stock Filter Karo">
         <div>
-          <p class="text-[10px] sm:text-xs font-bold text-red-400 uppercase tracking-wider">🦁 Aryan Ka Stock</p>
+          <p class="text-[10px] sm:text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-1">
+            <span>🦁</span> Aryan Ka Stock
+          </p>
           <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
             <span id="statAryanStock" class="text-xl sm:text-2xl font-black text-white">0</span>
             <span class="text-[10px] text-zinc-400 font-medium">pkts</span>
           </div>
         </div>
+        <div class="text-2xl sm:text-3xl transform transition-transform group-hover:scale-125 group-hover:-rotate-6">🦁</div>
       </div>
 
       <!-- Vinay Stock -->
-      <div class="bg-zinc-900/90 border border-blue-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-blue-500/60 card-hover-glow transition" onclick="filterByOwner('Vinay')">
+      <div id="stockCardVinay" class="partner-card-vinay rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer group" onclick="filterByOwner('Vinay')" title="Vinay Ka Stock Filter Karo">
         <div>
-          <p class="text-[10px] sm:text-xs font-bold text-blue-400 uppercase tracking-wider">💼 Vinay Ka Stock</p>
+          <p class="text-[10px] sm:text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1">
+            <span>💼</span> Vinay Ka Stock
+          </p>
           <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
             <span id="statVinayStock" class="text-xl sm:text-2xl font-black text-white">0</span>
             <span class="text-[10px] text-zinc-400 font-medium">pkts</span>
           </div>
         </div>
+        <div class="text-2xl sm:text-3xl transform transition-transform group-hover:scale-125 group-hover:rotate-6">💼</div>
       </div>
 
       <!-- Divyan Stock -->
-      <div class="bg-zinc-900/90 border border-emerald-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-emerald-500/60 card-hover-glow transition" onclick="filterByOwner('Divyan')">
+      <div id="stockCardDivyan" class="partner-card-divyan rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer group" onclick="filterByOwner('Divyan')" title="Divyan Ka Stock Filter Karo">
         <div>
-          <p class="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider">🚀 Divyan Ka Stock</p>
+          <p class="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+            <span>🚀</span> Divyan Ka Stock
+          </p>
           <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
             <span id="statDivyanStock" class="text-xl sm:text-2xl font-black text-white">0</span>
             <span class="text-[10px] text-zinc-400 font-medium">pkts</span>
           </div>
         </div>
+        <div class="text-2xl sm:text-3xl transform transition-transform group-hover:scale-125 group-hover:-rotate-6">🚀</div>
       </div>
 
+    </div>
+
+    <!-- Lively Multi-Segment Stock Distribution Bar -->
+    <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-3 sm:p-3.5 shadow-md card-hover-glow transition">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs mb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-sm">📊</span>
+          <span class="font-black text-white text-[11px] sm:text-xs uppercase tracking-wider">Live Stock Share</span>
+          <span class="text-[10px] text-zinc-400 hidden sm:inline">(Kamre mein kiska kitna stock bacha hai)</span>
+        </div>
+        <div class="flex items-center gap-3 text-[10px] font-extrabold">
+          <span class="flex items-center gap-1 text-red-400"><span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span> Aryan: <span id="distAryanPct">0%</span></span>
+          <span class="flex items-center gap-1 text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span> Vinay: <span id="distVinayPct">0%</span></span>
+          <span class="flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> Divyan: <span id="distDivyanPct">0%</span></span>
+        </div>
+      </div>
+      <!-- Progress Track -->
+      <div class="h-2.5 sm:h-3 w-full bg-zinc-800/90 rounded-full overflow-hidden flex p-0.5 gap-0.5 shadow-inner">
+        <div id="barAryanStock" class="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-500 transition-all duration-700 ease-out shadow-sm" style="width: 33.3%;" title="Aryan Stock"></div>
+        <div id="barVinayStock" class="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 transition-all duration-700 ease-out shadow-sm" style="width: 33.3%;" title="Vinay Stock"></div>
+        <div id="barDivyanStock" class="h-full rounded-full bg-gradient-to-r from-emerald-600 to-teal-400 transition-all duration-700 ease-out shadow-sm" style="width: 33.4%;" title="Divyan Stock"></div>
+      </div>
     </div>
 
     <!-- =========================================================================
