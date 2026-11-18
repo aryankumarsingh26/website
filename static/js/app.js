@@ -74,6 +74,15 @@ async function loadUsers() {
     updateMyStockLabel();
   } catch (err) {
     console.error('Error loading users:', err);
+    state.users = [
+      { id: 1, name: 'Aryan', avatar: '🦁', color: '#ef4444' },
+      { id: 2, name: 'Vinay', avatar: '💼', color: '#3b82f6' },
+      { id: 3, name: 'Divyan', avatar: '🚀', color: '#10b981' }
+    ];
+    state.activeUser = state.users[0];
+    renderUserSwitcher();
+    populateUserSelects();
+    updateMyStockLabel();
   }
 }
 
@@ -84,6 +93,14 @@ async function loadCategories() {
     populateCategoryDropdowns();
   } catch (err) {
     console.error('Error loading categories:', err);
+    state.categories = [
+      { id: 1, name: 'Maggi & Noodles', icon: '🍜' },
+      { id: 2, name: 'Kurkure & Chips', icon: '🍟' },
+      { id: 3, name: 'Biscuits & Bakery', icon: '🍪' },
+      { id: 4, name: 'Cold Drinks & Juices', icon: '🥤' },
+      { id: 5, name: 'Extra Snacks', icon: '📦' }
+    ];
+    populateCategoryDropdowns();
   }
 }
 

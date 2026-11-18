@@ -29,6 +29,14 @@ def block_sensitive_paths():
         if sensitive in path:
             return jsonify({"error": "Access Denied: Sensitive file protected"}), 403
 
+# Allow CORS for all API calls
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
 # ------------------------------------------------------------------------------
 # Frontend Page
 # ------------------------------------------------------------------------------
