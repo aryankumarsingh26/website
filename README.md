@@ -1,39 +1,56 @@
-# 🏪 SnackVault - Aryan, Vinay & Divyan Ka Stock & Sales System
+# 🏪 SnackVault - Aryan, Vinay & Divyan Ka Stock Tracker
 
-Ek modern Cloud Store & Inventory Web App jo special **Aryan**, **Vinay**, aur **Divyan** ke snack & Maggi selling business ke liye banayi gayi hai.
+Ek modern Cloud Store & Inventory Web App jo **Aryan**, **Vinay**, aur **Divyan** ke snack & Maggi selling business ke liye banayi gayi hai.
 
 ---
 
-## 🌟 Core Business Features
+## 🌟 Features
 
-1. **👥 3 Individual Partner Stock Sections (Ownership System)**:
+1. **👥 3 Partner Sections (Ownership System)**:
    - **🦁 Aryan Ka Stock**: Aryan jo saman dukaan se laya uska alag section.
    - **💼 Vinay Ka Stock**: Vinay jo saman laya uska alag section.
    - **🚀 Divyan Ka Stock**: Divyan jo saman laya uska alag section.
-   - **🌐 Sabhi Ka Stock (Combined Total)**: Pure store ka total stock ek nazar me!
-   - Har partner apna section khol kar apna stock add/update kar sakta hai, aur baki dono partner live dekh sakte hain.
+   - **🌐 Sabhi Ka Stock**: Teeno ka total combined stock ek nazar me.
 
-2. **➕ Custom Items With Custom Name & Quantity**:
-   - Koi bhi custom item add karo:
-     - **Item Name**: Maggi Masala, Kurkure Masala Munch, Yippee, Bourbon, Oreo, Sting, etc.
-     - **Category**: Maggi & Noodles, Kurkure & Chips, Biscuits & Bakery, Cold Drinks, Extras.
-     - **Custom Quantity**: 12, 24, 48 packets.
-     - **Kharid Rate (₹) & Bikri Rate (₹)**: Profit per packet auto-calculate hota hai!
+2. **➕ Ultra-Simple Custom Item Add**:
+   - Sirf 3 cheezein: **Item Name**, **Item Price (₹)**, aur **Item Quantity**.
 
-3. **💰 1-Click "Becho (Sell)" Action**:
-   - Jab koi packet becha jaye, seedha "Becho" button dabayein.
-   - Stock auto-deduct hota hai aur cash collected (revenue) record ho jata hai.
-   - Partner Sales tracker me batata hai ki Aryan, Vinay aur Divyan ne kitne-kitne packets beche aur kitna cash collect kiya.
+3. **💰 Smart "Becho" Modal with Custom Cash Input**:
+   - Stock instant minus hota hai.
+   - **Total Cash Received** me user khud se apni marzi ka custom cash amount type kar sakta hai.
 
-4. **⚡ Cloud Database (Supabase PostgreSQL)**:
-   - Real-time cloud sync &mdash; jab Vinay apne phone pe stock bechega ya add karega, Aryan aur Divyan ko unke phone pe live dikhega!
+4. **⚡ Quick Stock Buttons**:
+   - Fast `- 1 pkt` aur `+ 1 pkt` buttons direct stock ghatane/badhane ke liye.
+   - `+ Restock` button dukan se naya stock laane par.
 
-5. **📱 Mobile & Phone Orientation Optimized**:
-   - Mobile phones ke liye fixed bottom navigation bar (🏪 Stock, 💰 Bikri, 🛒 Dukaan, ⚖️ Hisab, 📜 Log).
-   - Zero horizontal scroll / screen wobble.
+5. **☁️ Supabase Cloud Database**:
+   - Real-time cloud sync with PostgreSQL. Teeno doston ke phones par live stock sync rehta hai.
+
+6. **📱 Mobile Optimized**:
+   - Clean mobile orientation, zero horizontal wobble.
 
 ---
 
-## 🚀 Live Access Links
-* **Laptop**: [http://localhost:5000](http://localhost:5000)
-* **Phone / Wi-Fi**: `http://10.3.47.56:5000` (WhatsApp group pe share karein)
+## 🚀 Setup & Run
+
+1. **Virtual Environment**:
+   ```bash
+   python -m venv .venv
+   .\.venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+2. **Environment Variables**:
+   Copy `.env.example` to `.env` and fill in your Supabase credentials:
+   ```env
+   PORT=5000
+   HOST=0.0.0.0
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_KEY=your-supabase-key
+   ```
+
+3. **Run**:
+   ```bash
+   python main.py
+   ```
+   Open `http://localhost:5000` in browser.

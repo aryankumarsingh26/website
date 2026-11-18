@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>🏪 SnackVault - Aryan, Vinay & Divyan Ka Stock Tracker</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Custom Mobile & Desktop CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans antialiased selection:bg-amber-500 selection:text-black overflow-x-hidden">
+
+  <!-- =========================================================================
+       Top Navigation Bar (Partners Switcher & Cloud Status)
+  ========================================================================== -->
+  <header class="sticky top-0 z-40 bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
+      <div class="flex items-center justify-between gap-2 sm:gap-4">
+        
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-red-500 flex items-center justify-center text-lg sm:text-xl shadow-lg shadow-amber-500/20 shrink-0">
+            🏪
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-sm sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5 truncate">
+              SnackVault <span class="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">3 Partners</span>
+            </h1>
+            <p class="hidden sm:block text-xs text-zinc-400">Aryan • Vinay • Divyan (Maggi & Snacks Store)</p>
+          </div>
+        </div>
+
+        <!-- Right Side: DB Cloud Badge, Phone Link & Active Partner Switcher -->
+        <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          
+          <!-- Cloud Supabase Status Badge -->
+          <button id="dbStatusBadge" class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-semibold transition border bg-emerald-500/15 border-emerald-500/40 text-emerald-400" title="Supabase Cloud Database Connected">
+            <span id="dbStatusIcon" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="dbStatusText" class="hidden md:inline">⚡ Supabase Live</span>
+          </button>
+
+          <!-- Share Wi-Fi / Phone Link Button -->
+          <button id="wifiShareBtn" class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-300 border border-zinc-700 transition" title="Phone Link">
+            <i class="fa-solid fa-wifi text-emerald-400"></i>
+            <span class="hidden md:inline">Phone Link</span>
+          </button>
+
+          <!-- Current Active Partner Selector -->
+          <div class="relative">
+            <button id="userDropdownBtn" class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-zinc-800 to-zinc-800/80 hover:from-zinc-750 hover:to-zinc-700 border border-amber-500/40 text-xs sm:text-sm font-semibold transition shadow-sm">
+              <span id="activeUserAvatar" class="text-sm sm:text-base">🦁</span>
+              <span id="activeUserName" class="text-amber-400 max-w-[70px] sm:max-w-[120px] truncate">Aryan</span>
+              <i class="fa-solid fa-chevron-down text-[10px] sm:text-xs text-zinc-400"></i>
+            </button>
+            
+            <!-- Partner Switcher Dropdown Menu -->
+            <div id="userDropdownMenu" class="hidden absolute right-0 mt-2 w-60 rounded-xl bg-zinc-900 border border-zinc-800 shadow-2xl p-2 z-50 animate-in">
+              <div class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider px-2 py-1">
+                Aap Kaun Ho? (Active Partner)
+              </div>
+              <div id="userListContainer" class="space-y-1">
+                <!-- Dynamically populated partners -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       Main Content Container
+  ========================================================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24 sm:pb-8">
+
+    <!-- Top Key Metrics Cards (Clean 4-Column Stock Overview) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+      
+      <!-- Combined Total Stock -->
+      <div class="bg-gradient-to-br from-amber-500/20 via-zinc-900 to-zinc-900 border border-amber-500/40 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg">
+        <div>
+          <p class="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">Total Stock</p>
+          <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
+            <span id="statTotalStock" class="text-2xl sm:text-3xl font-black text-white">--</span>
+            <span class="text-[10px] sm:text-xs text-zinc-400 font-semibold">packets</span>
+          </div>
+        </div>
+        <div class="text-2xl sm:text-3xl">📦</div>
+      </div>
+
+      <!-- Aryan Stock -->
+      <div class="bg-zinc-900/90 border border-red-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-red-500/60 transition" onclick="filterByOwner('Aryan')">
+        <div>
+          <p class="text-[10px] sm:text-xs font-bold text-red-400 uppercase tracking-wider">🦁 Aryan Ka Stock</p>
+          <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
+            <span id="statAryanStock" class="text-xl sm:text-2xl font-black text-white">0</span>
+            <span class="text-[10px] text-zinc-400 font-medium">pkts</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vinay Stock -->
+      <div class="bg-zinc-900/90 border border-blue-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-blue-500/60 transition" onclick="filterByOwner('Vinay')">
+        <div>
+          <p class="text-[10px] sm:text-xs font-bold text-blue-400 uppercase tracking-wider">💼 Vinay Ka Stock</p>
+          <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
+            <span id="statVinayStock" class="text-xl sm:text-2xl font-black text-white">0</span>
+            <span class="text-[10px] text-zinc-400 font-medium">pkts</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divyan Stock -->
+      <div class="bg-zinc-900/90 border border-emerald-500/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer hover:border-emerald-500/60 transition" onclick="filterByOwner('Divyan')">
+        <div>
+          <p class="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider">🚀 Divyan Ka Stock</p>
+          <div class="flex items-baseline gap-1 mt-0.5 sm:mt-1">
+            <span id="statDivyanStock" class="text-xl sm:text-2xl font-black text-white">0</span>
+            <span class="text-[10px] text-zinc-400 font-medium">pkts</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Desktop Navigation Tabs -->
+    <div class="hidden sm:flex items-center gap-2 overflow-x-auto pb-2 border-b border-zinc-800 no-scrollbar">
+      <button class="tab-btn active flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition whitespace-nowrap" data-tab="tab-inventory">
+        <span>🏪</span> Store Inventory & Stock
+      </button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition whitespace-nowrap" data-tab="tab-shopping">
+        <span>🛒</span> Dukaan Restock List (<span id="shoppingCount">0</span>)
+      </button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition whitespace-nowrap" data-tab="tab-hisab">
+        <span>⚖️</span> Kharid Hisab-Kitab
+      </button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition whitespace-nowrap" data-tab="tab-activity">
+        <span>📜</span> Live Activity
+      </button>
+    </div>
+
+    <!-- =======================================================================
+         TAB 1: STORE INVENTORY & PARTNER STOCK MANAGEMENT
+    ======================================================================== -->
+    <section id="tab-inventory" class="tab-content space-y-4 sm:space-y-5">
+      
+      <!-- Top Action Bar: Add Custom Item & Section Notice -->
+      <div class="bg-gradient-to-r from-zinc-900 to-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 sm:p-5 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">
+            📦 Stock Ownership System
+          </span>
+          <h2 class="text-base sm:text-xl font-bold text-white flex items-center gap-2">
+            Store Items & Stock Tracker
+          </h2>
+          <p class="text-xs text-zinc-400 mt-0.5">
+            Har partner apna stock khud add aur update kar sakta hai, aur baki dono partner live dekh sakte hain!
+          </p>
+        </div>
+
+        <!-- Big Add Custom Item Button -->
+        <button id="openAddItemBtn" class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-xs sm:text-sm shadow-md transition active:scale-95 shrink-0">
+          <i class="fa-solid fa-plus text-sm"></i> + Naya Item Jodo (Custom Name & Qty)
+        </button>
+      </div>
+
+      <!-- Partner Section Filter Pills (Aryan, Vinay, Divyan, All) -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider shrink-0 mr-1 hidden sm:inline">Section:</span>
+        <button class="owner-pill active px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-black shadow-sm transition shrink-0" data-owner="all">
+          🌐 Sabhi Ka Stock (All Combined)
+        </button>
+        <button class="owner-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 transition shrink-0" data-owner="my">
+          👤 Mera Stock (<span id="myStockLabel">Active</span>)
+        </button>
+        <button class="owner-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 transition shrink-0" data-owner="Aryan">
+          🦁 Aryan Ka Stock
+        </button>
+        <button class="owner-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 transition shrink-0" data-owner="Vinay">
+          💼 Vinay Ka Stock
+        </button>
+        <button class="owner-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 transition shrink-0" data-owner="Divyan">
+          🚀 Divyan Ka Stock
+        </button>
+      </div>
+
+      <!-- Search & Category Filters Bar -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-zinc-900/80 p-3 rounded-2xl border border-zinc-800">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
+          <input type="text" id="inventorySearch" placeholder="Search Maggi, Yippee, Kurkure, Biscuits..." class="w-full bg-zinc-800 text-xs sm:text-sm pl-8 pr-3 py-2 rounded-xl border border-zinc-700 focus:outline-none focus:border-amber-500 text-white placeholder-zinc-500" />
+        </div>
+        <select id="categoryFilter" class="bg-zinc-800 text-xs sm:text-sm px-3 py-2 rounded-xl border border-zinc-700 focus:outline-none focus:border-amber-500 text-zinc-200">
+          <option value="all">Sabhi Categories (All)</option>
+        </select>
+      </div>
+
+      <!-- Items Grid -->
+      <div id="itemsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        <!-- Dynamically populated item cards -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="itemsEmptyState" class="hidden text-center py-14 px-4 bg-zinc-900/60 rounded-3xl border border-dashed border-zinc-700/80 my-4">
+        <div class="text-5xl mb-3">🏪</div>
+        <h4 class="text-base sm:text-lg font-extrabold text-white">Store Abhi Khali Hai!</h4>
+        <p class="text-xs sm:text-sm text-zinc-400 mt-1 max-w-sm mx-auto leading-relaxed">
+          Aap, Vinay aur Divyan jo bhi dukaan se saman laye hain, upar <strong class="text-amber-400 font-bold">"+ Naya Item Jodo"</strong> dabakar item name, price aur quantity ke sath add karein!
+        </p>
+      </div>
+
+    </section>
+
+    <!-- =======================================================================
+         TAB 2: DUKAAN RESTOCK & SHOPPING LIST
+    ======================================================================== -->
+    <section id="tab-shopping" class="tab-content hidden space-y-4 sm:space-y-6">
+      
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-lg">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800">
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <span>🛒</span> Dukaan Se Kya Lana Hai? (Restock List)
+            </h3>
+            <p class="text-xs text-zinc-400 mt-0.5">Dukaan jaate waqt ye saman le aana!</p>
+          </div>
+          
+          <form id="addShoppingForm" class="flex w-full sm:w-auto items-center gap-2">
+            <input type="text" id="shoppingInput" placeholder="Eg: 24 pack Maggi, Kurkure, Bourbon..." required class="bg-zinc-800 text-xs sm:text-sm px-3 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500 w-full sm:w-64" />
+            <button type="submit" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs transition whitespace-nowrap">
+              + Add
+            </button>
+          </form>
+        </div>
+
+        <div id="shoppingListContainer" class="divide-y divide-zinc-800 mt-3 space-y-2">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =======================================================================
+         TAB 4: HISAB-KITAB (PURCHASES & SPLITS)
+    ======================================================================== -->
+    <section id="tab-hisab" class="tab-content hidden space-y-4 sm:space-y-6">
+      
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Total Dukaan Kharid (Wholesale)</p>
+          <div class="flex items-baseline gap-1 mt-1 text-xl sm:text-2xl font-black text-white">
+            <span>₹</span><span id="hisabTotalSpent">0.00</span>
+          </div>
+        </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Per Partner Share (1/3)</p>
+          <div class="flex items-baseline gap-1 mt-1 text-xl sm:text-2xl font-black text-amber-400">
+            <span>₹</span><span id="hisabPerShare">0.00</span>
+          </div>
+        </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Naya Kharid Bill</p>
+            <p class="text-[11px] text-zinc-400 mt-0.5">Dukaan ka kharcha</p>
+          </div>
+          <button id="addExpenseBtn" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs transition">
+            + Add Bill
+          </button>
+        </div>
+      </div>
+
+      <!-- Who owes whom -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-lg">
+        <h4 class="text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-wider mb-2">
+          ⚖️ Faisla (Who Owes Whom?)
+        </h4>
+        <div id="settlementsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <!-- Settlements -->
+        </div>
+      </div>
+
+      <!-- Balances Table -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-lg overflow-x-auto">
+        <h4 class="text-xs sm:text-sm font-bold text-white mb-2">Partners Kharcha & Balance</h4>
+        <table class="w-full text-left text-xs sm:text-sm min-w-[320px]">
+          <thead>
+            <tr class="text-[10px] sm:text-xs uppercase text-zinc-400 border-b border-zinc-800 pb-2">
+              <th class="py-2">Partner</th>
+              <th class="py-2">Dukaan Pe Lagaya</th>
+              <th class="py-2">Hissa</th>
+              <th class="py-2 text-right">Net Balance</th>
+            </tr>
+          </thead>
+          <tbody id="balancesTableBody" class="divide-y divide-zinc-800">
+            <!-- Rows -->
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- =======================================================================
+         TAB 5: LIVE ACTIVITY LOG
+    ======================================================================== -->
+    <section id="tab-activity" class="tab-content hidden space-y-4">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-lg">
+        <h3 class="text-base font-bold text-white mb-3">Live Activity Feed</h3>
+        <div id="activityTimeline" class="space-y-2.5">
+          <!-- Timeline items -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       Mobile Fixed Bottom Navigation Bar
+  ========================================================================== -->
+  <nav class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800 px-2 py-1.5 flex items-center justify-around mobile-bottom-nav shadow-2xl">
+    <button class="mobile-nav-btn active flex flex-col items-center justify-center p-1 text-[10px] font-bold" data-tab="tab-inventory">
+      <span class="text-lg nav-icon leading-none mb-0.5">🏪</span>
+      <span>Stock</span>
+    </button>
+    <button class="mobile-nav-btn flex flex-col items-center justify-center p-1 text-[10px] font-bold" data-tab="tab-shopping">
+      <span class="text-lg nav-icon leading-none mb-0.5">🛒</span>
+      <span>Dukaan</span>
+    </button>
+    <button class="mobile-nav-btn flex flex-col items-center justify-center p-1 text-[10px] font-bold" data-tab="tab-hisab">
+      <span class="text-lg nav-icon leading-none mb-0.5">⚖️</span>
+      <span>Hisab</span>
+    </button>
+    <button class="mobile-nav-btn flex flex-col items-center justify-center p-1 text-[10px] font-bold" data-tab="tab-activity">
+      <span class="text-lg nav-icon leading-none mb-0.5">📜</span>
+      <span>Log</span>
+    </button>
+  </nav>
+
+  <!-- =========================================================================
+       MODALS
+  ========================================================================== -->
+
+  <!-- 1. Add Custom Item Modal (Ultra Simple: Name, Price, Quantity only) -->
+  <div id="addItemModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl relative animate-in">
+      <button class="modal-close-btn absolute top-3.5 right-3.5 text-zinc-400 hover:text-white text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="flex items-center gap-2.5 mb-3.5">
+        <span class="text-2xl sm:text-3xl">📦</span>
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-white">Naya Item Jodo</h3>
+          <p class="text-[11px] text-amber-400 font-semibold" id="addItemOwnerBadge">Adding to: Aryan Ka Stock</p>
+        </div>
+      </div>
+      <form id="addItemForm" class="space-y-3.5">
+        <!-- 1. Item Name -->
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Item Name *</label>
+          <input type="text" id="newItemName" placeholder="Eg: Maggi, Kurkure, Yippee, Bourbon" required class="w-full bg-zinc-800 text-sm px-3.5 py-2.5 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500 font-semibold placeholder-zinc-500" />
+        </div>
+        
+        <!-- 2. Item Price -->
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Item Price (₹) *</label>
+          <input type="number" step="0.5" min="0" id="newItemPrice" placeholder="Eg: 14" required class="w-full bg-zinc-800 text-sm px-3.5 py-2.5 rounded-xl border border-zinc-700 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 placeholder-zinc-500" />
+        </div>
+
+        <!-- 3. Item Quantity -->
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Item Quantity *</label>
+          <input type="number" min="1" id="newItemQuantity" placeholder="Eg: 12" required class="w-full bg-zinc-800 text-sm px-3.5 py-2.5 rounded-xl border border-zinc-700 text-white font-bold focus:outline-none focus:border-amber-500 placeholder-zinc-500" />
+        </div>
+
+        <button type="submit" class="w-full py-2.5 mt-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-sm shadow-md transition active:scale-98">
+          Save & Add to Stock 🚀
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. SELL Modal (Bikri & Custom Cash Received) -->
+  <div id="sellModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative animate-in max-h-[90vh] overflow-y-auto">
+      <button class="modal-close-btn absolute top-3.5 right-3.5 text-zinc-400 hover:text-white text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="flex items-center gap-2.5 mb-3.5">
+        <span class="text-2xl sm:text-3xl">💰</span>
+        <div>
+          <h3 id="sellModalTitle" class="text-base sm:text-lg font-bold text-white">Item Becho (Sell)</h3>
+          <p class="text-[11px] text-zinc-400">Stock minus hoga aur jitna cash mila wo record ho jayega</p>
+        </div>
+      </div>
+      <form id="sellForm" class="space-y-3.5">
+        <input type="hidden" id="sellItemId" />
+        
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Kitne Packets Beche?</label>
+          <div class="flex items-center gap-2">
+            <button type="button" class="qty-btn-minus px-4 py-2 rounded-xl bg-zinc-800 text-white font-bold hover:bg-zinc-700 active:scale-95">-</button>
+            <input type="number" id="sellAmount" min="1" max="100" value="1" required class="w-full text-center bg-zinc-800 text-lg font-bold rounded-xl py-2 text-white border border-zinc-700 focus:outline-none focus:border-emerald-500" />
+            <button type="button" class="qty-btn-plus px-4 py-2 rounded-xl bg-zinc-800 text-white font-bold hover:bg-zinc-700 active:scale-95">+</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-300 mb-1">Item Rate (₹/pkt)</label>
+            <input type="number" step="0.5" id="sellPricePerUnit" required class="w-full bg-zinc-800 text-sm px-3 py-2 rounded-xl border border-zinc-700 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-300 mb-1">Kisne Becha? (Seller)</label>
+            <select id="sellUserSelect" class="w-full bg-zinc-800 text-xs sm:text-sm px-2.5 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500">
+              <!-- Dynamically populated with partners -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Custom Editable Total Cash Received -->
+        <div class="p-3.5 bg-zinc-800/80 rounded-xl border border-emerald-500/40 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-black text-emerald-400 uppercase tracking-wider">
+              Total Cash Received (₹) *
+            </label>
+            <span class="text-[10px] text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded-md border border-zinc-700 font-semibold">
+              ✏️ Khud se type karein
+            </span>
+          </div>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400 font-black text-xl">₹</span>
+            <input 
+              type="number" 
+              step="any" 
+              min="0" 
+              id="sellTotalReceived" 
+              placeholder="0.00" 
+              required 
+              class="w-full bg-zinc-900 text-emerald-400 text-2xl font-black pl-8 pr-3.5 py-2.5 rounded-xl border border-zinc-700 focus:border-emerald-400 focus:outline-none"
+            />
+          </div>
+          <p class="text-[10px] text-zinc-400">
+            Aap apni marzi se yahan custom cash amount type kar sakte hain.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Customer / Room / Note (Optional)</label>
+          <input type="text" id="sellNotes" placeholder="Eg: Room 204 ke dost ne diya" class="w-full bg-zinc-800 text-xs sm:text-sm px-3 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-extrabold text-xs sm:text-sm shadow-md transition active:scale-98">
+          Confirm Sale & Cash Received 💵
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Restock Modal (Brought from shop) -->
+  <div id="restockModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative animate-in max-h-[90vh] overflow-y-auto">
+      <button class="modal-close-btn absolute top-3.5 right-3.5 text-zinc-400 hover:text-white text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="flex items-center gap-2.5 mb-3.5">
+        <span class="text-2xl sm:text-3xl">🛒</span>
+        <div>
+          <h3 id="restockModalTitle" class="text-base sm:text-lg font-bold text-white">Stock Restock Karo</h3>
+          <p class="text-[11px] text-zinc-400">Dukaan se naye packets laye</p>
+        </div>
+      </div>
+      <form id="restockForm" class="space-y-3.5">
+        <input type="hidden" id="restockItemId" />
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Kitne Packets Laye?</label>
+          <input type="number" id="restockAmount" min="1" value="12" required class="w-full bg-zinc-800 text-sm px-3 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500 font-bold" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Kitna Kharcha Hua? (₹) (Optional - Adds to Hisab)</label>
+          <input type="number" step="0.5" id="restockCost" placeholder="0.00" class="w-full bg-zinc-800 text-sm px-3 py-2 rounded-xl border border-zinc-700 text-emerald-400 focus:outline-none focus:border-emerald-500 font-bold" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Kisne Kharida? (Partner)</label>
+          <select id="restockUserSelect" class="w-full bg-zinc-800 text-xs sm:text-sm px-3 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500">
+            <!-- Dynamic users -->
+          </select>
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs sm:text-sm shadow-md transition active:scale-98">
+          Save Restock
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Add Expense Modal -->
+  <div id="addExpenseModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative animate-in max-h-[90vh] overflow-y-auto">
+      <button class="modal-close-btn absolute top-3.5 right-3.5 text-zinc-400 hover:text-white text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="flex items-center gap-2.5 mb-3.5">
+        <span class="text-2xl sm:text-3xl">💰</span>
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-white">Dukaan Kharid Bill Jodo</h3>
+          <p class="text-[11px] text-zinc-400">Sabhi 3 doston mein barabar batega (1/3)</p>
+        </div>
+      </div>
+      <form id="addExpenseForm" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Kis Cheez Ka Bill Hai? *</label>
+          <input type="text" id="expenseTitle" placeholder="Eg: Maggi 24 pack wholesale, Kurkure carton" required class="w-full bg-zinc-800 text-xs sm:text-sm px-3 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Total Paisa (₹) *</label>
+          <input type="number" step="0.5" id="expenseAmount" placeholder="240" required class="w-full bg-zinc-800 text-sm px-3 py-2 rounded-xl border border-zinc-700 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Kisne Pay Kiya? (Payer)</label>
+          <select id="expensePayerSelect" class="w-full bg-zinc-800 text-xs sm:text-sm px-3 py-2 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500">
+            <!-- Dynamic users -->
+          </select>
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs sm:text-sm shadow-md transition active:scale-98">
+          Add to Hisab-Kitab
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Wi-Fi Share Modal -->
+  <div id="wifiModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative animate-in text-center max-h-[90vh] overflow-y-auto">
+      <button class="modal-close-btn absolute top-3.5 right-3.5 text-zinc-400 hover:text-white text-lg p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-2.5 border border-emerald-500/30">
+        <i class="fa-solid fa-mobile-screen"></i>
+      </div>
+      <h3 class="text-base sm:text-lg font-bold text-white">Vinay & Divyan Phone Pe Kholein</h3>
+      <p class="text-xs text-zinc-400 mt-1 max-w-xs mx-auto">
+        Same Wi-Fi ya Mobile Hotspot se connect karke phone pe direct stock dekho aur becho!
+      </p>
+
+      <div class="mt-3.5 p-2.5 bg-zinc-800 rounded-xl border border-zinc-700 flex items-center justify-between gap-2">
+        <span id="wifiShareUrl" class="text-xs font-mono text-emerald-400 font-bold truncate">http://10.3.47.56:5000</span>
+        <button id="copyWifiLinkBtn" class="px-2.5 py-1 bg-zinc-700 hover:bg-zinc-600 text-xs rounded-lg text-white font-medium transition flex items-center gap-1 shrink-0">
+          <i class="fa-regular fa-copy"></i> Copy
+        </button>
+      </div>
+
+      <p class="text-[11px] text-zinc-500 mt-2.5">
+        Ye link WhatsApp group pe Vinay aur Divyan ko bhej do!
+      </p>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-16 sm:bottom-5 right-3 sm:right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-[90vw]"></div>
+
+  <!-- Main JavaScript File -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
