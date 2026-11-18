@@ -37,10 +37,27 @@ def add_cors_headers(response):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return response
 
+# WSGI Middleware to fix Vercel Serverless routing & PATH_INFO
+class VercelPathFixerMiddleware:
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        matched_path = environ.get("HTTP_X_MATCHED_PATH")
+        if matched_path:
+            environ["PATH_INFO"] = matched_path
+        elif environ.get("PATH_INFO") in ["/api/index", "/api/index.py", "/api"]:
+            environ["PATH_INFO"] = "/"
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = VercelPathFixerMiddleware(app.wsgi_app)
+
 # ------------------------------------------------------------------------------
 # Frontend Page
 # ------------------------------------------------------------------------------
 @app.route("/")
+@app.route("/api/index")
+@app.route("/api/index.py")
 def index():
     return render_template("index.html")
 
