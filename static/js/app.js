@@ -21,6 +21,7 @@ const state = {
 // Initialization
 // ------------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', async () => {
+  initTheme();
   setupEventListeners();
   await loadDbStatus();
   await loadUsers();
@@ -28,6 +29,71 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadNetworkInfo();
   await refreshAllData();
 });
+
+// ------------------------------------------------------------------------------
+// Theme Management (Light Mode & Dark Mode)
+// ------------------------------------------------------------------------------
+function initTheme() {
+  const saved = localStorage.getItem('snack_theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initialTheme = saved ? saved : (prefersDark ? 'dark' : 'dark');
+  applyTheme(initialTheme);
+
+  const toggleBtn = document.getElementById('themeToggleBtn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', toggleTheme);
+  }
+}
+
+function applyTheme(theme) {
+  const html = document.documentElement;
+  const icon = document.getElementById('themeToggleIcon');
+  const btn = document.getElementById('themeToggleBtn');
+  const dropdownLabel = document.getElementById('dropdownThemeLabel');
+
+  if (theme === 'light') {
+    html.classList.remove('dark');
+    if (icon) {
+      icon.className = 'fa-solid fa-moon text-indigo-500 text-sm transition-transform duration-300 rotate-12';
+    }
+    if (btn) {
+      btn.title = 'Switch to Dark Mode 🌙';
+      btn.classList.add('bg-slate-100', 'border-slate-300');
+    }
+    if (dropdownLabel) {
+      dropdownLabel.textContent = 'Light ☀️';
+    }
+  } else {
+    html.classList.add('dark');
+    if (icon) {
+      icon.className = 'fa-solid fa-sun text-amber-400 text-sm transition-transform duration-300 rotate-0';
+    }
+    if (btn) {
+      btn.title = 'Switch to Light Mode ☀️';
+      btn.classList.remove('bg-slate-100', 'border-slate-300');
+    }
+    if (dropdownLabel) {
+      dropdownLabel.textContent = 'Dark 🌙';
+    }
+  }
+  localStorage.setItem('snack_theme', theme);
+}
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+  const icon = document.getElementById('themeToggleIcon');
+  if (icon) {
+    icon.style.transform = 'scale(0.5) rotate(180deg)';
+    setTimeout(() => {
+      icon.style.transform = '';
+    }, 220);
+  }
+
+  applyTheme(newTheme);
+  showToast(newTheme === 'light' ? 'Light Mode On ☀️' : 'Dark Mode On 🌙', 'info');
+}
 
 // ------------------------------------------------------------------------------
 // API Loaders
@@ -1204,7 +1270,7 @@ function showToast(message, type = 'info') {
   };
 
   const toast = document.createElement('div');
-  toast.className = `px-3.5 py-2 rounded-xl text-xs font-extrabold shadow-2xl flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ${bgColors[type] || bgColors.info}`;
+  toast.className = `toast-notification px-3.5 py-2 rounded-xl text-xs font-extrabold shadow-2xl flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ${bgColors[type] || bgColors.info}`;
   toast.innerHTML = `<span>${message}</span>`;
 
   container.appendChild(toast);

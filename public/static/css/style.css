@@ -1,16 +1,57 @@
 /* ==============================================================================
-   SnackVault - Premium Charcoal Grey Theme & Lively Micro-Interactions
+   SnackVault - Premium Charcoal Grey & Crisp Light Mode Theme System
 ============================================================================== */
 
-:root {
-  --theme-bg-canvas: #12141a;       /* Deep modern charcoal slate */
-  --theme-card-bg: #1a1d26;         /* Refined grey card surface */
-  --theme-card-hover: #222632;      /* Elevated hover card */
-  --theme-subcard-bg: #20242f;      /* Subcard / input background */
-  --theme-border: #2d3342;          /* Crisp modern grey border */
+:root, html.dark {
+  --color-zinc-950: 17 19 24;       /* #111318 canvas background */
+  --color-zinc-900: 24 27 35;       /* #181b23 card background */
+  --color-zinc-850: 30 34 45;       /* #1e222d elevated surface */
+  --color-zinc-800: 37 41 53;       /* #252935 subcard / input */
+  --color-zinc-750: 45 51 66;       /* #2d3342 active pill */
+  --color-zinc-700: 53 60 77;       /* #353c4d border */
+  --color-zinc-600: 73 82 103;      /* #495267 hover border */
+  --color-zinc-500: 107 118 146;   /* #6b7692 muted text */
+  --color-zinc-400: 154 165 192;   /* #9aa5c0 secondary text */
+  --color-zinc-300: 197 205 226;   /* #c5cde2 body text */
+  --color-zinc-200: 226 230 244;   /* #e2e6f4 heading text */
+  --color-zinc-100: 242 245 252;   /* #f2f5fc primary text */
+
+  --theme-bg-canvas: #111318;
+  --theme-card-bg: #181b23;
+  --theme-card-hover: #222632;
+  --theme-subcard-bg: #252935;
+  --theme-border: #353c4d;
   --theme-border-glow: rgba(245, 158, 11, 0.25);
-  --theme-text-primary: #f1f3f9;
-  --theme-text-muted: #9aa2b5;
+  --theme-text-primary: #f2f5fc;
+  --theme-text-heading: #ffffff;
+  --theme-text-muted: #9aa5c0;
+  --theme-modal-bg: rgba(0, 0, 0, 0.8);
+}
+
+html:not(.dark) {
+  --color-zinc-950: 244 246 250;   /* #f4f6fa light canvas */
+  --color-zinc-900: 255 255 255;   /* #ffffff pure white card */
+  --color-zinc-850: 248 250 252;   /* #f8fafc elevated light card */
+  --color-zinc-800: 241 245 249;   /* #f1f5f9 subcard / input / tags */
+  --color-zinc-750: 226 232 240;   /* #e2e8f0 pill background */
+  --color-zinc-700: 226 232 240;   /* #e2e8f0 crisp light border */
+  --color-zinc-600: 203 213 225;   /* #cbd5e1 border hover */
+  --color-zinc-500: 148 163 184;   /* #94a3b8 subtle text */
+  --color-zinc-400: 100 116 139;   /* #64748b secondary text */
+  --color-zinc-300: 71 85 105;     /* #475569 medium text */
+  --color-zinc-200: 30 41 59;      /* #1e293b dark slate text */
+  --color-zinc-100: 15 23 42;      /* #0f172a primary headings */
+
+  --theme-bg-canvas: #f4f6fa;
+  --theme-card-bg: #ffffff;
+  --theme-card-hover: #f8fafc;
+  --theme-subcard-bg: #f1f5f9;
+  --theme-border: #e2e8f0;
+  --theme-border-glow: rgba(245, 158, 11, 0.25);
+  --theme-text-primary: #1e293b;
+  --theme-text-heading: #0f172a;
+  --theme-text-muted: #64748b;
+  --theme-modal-bg: rgba(15, 23, 42, 0.55);
 }
 
 /* Prevent horizontal overflow & shifting on all phones */
@@ -433,4 +474,191 @@ button:active:not(:disabled) {
   box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3) !important;
   transform: scale(1.04);
 }
+
+/* ==============================================================================
+   Light Mode Theme Polish & Overrides (Active when html:not(.dark))
+============================================================================== */
+
+/* Fluid Theme Transitions */
+body, header, main, nav, .stock-card-wrapper, 
+.partner-card-total, .partner-card-aryan, .partner-card-vinay, .partner-card-divyan, 
+input, select, button, .modal-overlay > div {
+  transition: background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, box-shadow 0.22s ease !important;
+}
+
+/* In Light Mode, swap default text-white to dark slate #0f172a, except on colored buttons & badges */
+html:not(.dark) .text-white {
+  color: #0f172a !important;
+}
+
+/* Retain crisp white text on colored buttons & badges in light mode */
+html:not(.dark) .keep-white,
+html:not(.dark) .floating-delta-badge,
+html:not(.dark) button.bg-blue-500,
+html:not(.dark) button.bg-blue-600,
+html:not(.dark) button.bg-red-500,
+html:not(.dark) button.bg-red-600,
+html:not(.dark) button.bg-emerald-500,
+html:not(.dark) button.bg-emerald-600,
+html:not(.dark) .bg-blue-500,
+html:not(.dark) .bg-red-500,
+html:not(.dark) .bg-emerald-500,
+html:not(.dark) .bg-emerald-600,
+html:not(.dark) .toast-notification,
+html:not(.dark) .toast-notification * {
+  color: #ffffff !important;
+}
+
+/* Light mode card shadows */
+html:not(.dark) .shadow-lg,
+html:not(.dark) .shadow-xl,
+html:not(.dark) .shadow-md {
+  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04) !important;
+}
+
+html:not(.dark) .modal-overlay {
+  background-color: var(--theme-modal-bg) !important;
+}
+
+/* Light mode stock top metrics partner cards */
+html:not(.dark) .partner-card-total {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.85) 0%, #ffffff 80%) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+}
+html:not(.dark) .partner-card-total:hover {
+  border-color: rgba(245, 158, 11, 0.85) !important;
+  box-shadow: 0 10px 24px -4px rgba(245, 158, 11, 0.25) !important;
+}
+
+html:not(.dark) .partner-card-aryan {
+  background: linear-gradient(135deg, rgba(254, 226, 226, 0.8) 0%, #ffffff 80%) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+html:not(.dark) .partner-card-aryan:hover,
+html:not(.dark) .partner-card-aryan.active-stock-card {
+  border-color: rgba(239, 68, 68, 0.85) !important;
+  box-shadow: 0 10px 24px -4px rgba(239, 68, 68, 0.22) !important;
+}
+
+html:not(.dark) .partner-card-vinay {
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.8) 0%, #ffffff 80%) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+html:not(.dark) .partner-card-vinay:hover,
+html:not(.dark) .partner-card-vinay.active-stock-card {
+  border-color: rgba(59, 130, 246, 0.85) !important;
+  box-shadow: 0 10px 24px -4px rgba(59, 130, 246, 0.22) !important;
+}
+
+html:not(.dark) .partner-card-divyan {
+  background: linear-gradient(135deg, rgba(209, 250, 229, 0.8) 0%, #ffffff 80%) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+html:not(.dark) .partner-card-divyan:hover,
+html:not(.dark) .partner-card-divyan.active-stock-card {
+  border-color: rgba(16, 185, 129, 0.85) !important;
+  box-shadow: 0 10px 24px -4px rgba(16, 185, 129, 0.22) !important;
+}
+
+/* Light mode ambient orbs */
+html:not(.dark) .ambient-orb-1 {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0) 70%) !important;
+}
+html:not(.dark) .ambient-orb-2 {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.07) 0%, rgba(16, 185, 129, 0) 70%) !important;
+}
+html:not(.dark) .ambient-orb-3 {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0) 70%) !important;
+}
+
+/* Light mode stock cards in grid */
+html:not(.dark) .stock-card-wrapper {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 3px 12px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+html:not(.dark) .stock-card-wrapper:hover {
+  background-color: #ffffff !important;
+  box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.09), 0 4px 12px -2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html:not(.dark) .owner-glow-aryan:hover {
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 0 14px 28px -6px rgba(239, 68, 68, 0.15) !important;
+}
+html:not(.dark) .owner-glow-vinay:hover {
+  border-color: rgba(59, 130, 246, 0.7) !important;
+  box-shadow: 0 14px 28px -6px rgba(59, 130, 246, 0.15) !important;
+}
+html:not(.dark) .owner-glow-divyan:hover {
+  border-color: rgba(16, 185, 129, 0.7) !important;
+  box-shadow: 0 14px 28px -6px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Light mode text & badge contrast boosts */
+html:not(.dark) .text-red-400 {
+  color: #dc2626 !important;
+}
+html:not(.dark) .text-blue-400 {
+  color: #2563eb !important;
+}
+html:not(.dark) .text-emerald-400 {
+  color: #059669 !important;
+}
+html:not(.dark) .text-amber-400 {
+  color: #d97706 !important;
+}
+html:not(.dark) .text-amber-300 {
+  color: #b45309 !important;
+}
+html:not(.dark) .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+html:not(.dark) .bg-red-500\/20 {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+}
+html:not(.dark) .bg-blue-500\/20 {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+html:not(.dark) .bg-emerald-500\/20 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+html:not(.dark) .bg-amber-500\/20 {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+
+/* Light mode inputs and selects */
+html:not(.dark) input,
+html:not(.dark) select {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+html:not(.dark) input:focus,
+html:not(.dark) select:focus {
+  background-color: #ffffff !important;
+  border-color: #f59e0b !important;
+}
+html:not(.dark) input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Light mode modals */
+html:not(.dark) .modal-overlay > div {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Light mode scrollbars */
+html:not(.dark) ::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+}
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+}
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
 

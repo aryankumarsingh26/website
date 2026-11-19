@@ -18,6 +18,20 @@
   <!-- Canvas Confetti for lively celebration effects -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   
+  <!-- Early Theme Boot Script to prevent flicker -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('snack_theme');
+        if (saved === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      } catch(e) {}
+    })();
+  </script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -28,18 +42,18 @@
           },
           colors: {
             zinc: {
-              950: '#111318', // canvas background
-              900: '#181b23', // card background
-              850: '#1e222d', // elevated surface
-              800: '#252935', // subcard / input
-              750: '#2d3342', // active pill
-              700: '#353c4d', // border
-              600: '#495267', // hover border
-              500: '#6b7692', // muted text
-              400: '#9aa5c0', // secondary text
-              300: '#c5cde2', // body text
-              200: '#e2e6f4', // heading text
-              100: '#f2f5fc'  // white text
+              950: 'rgb(var(--color-zinc-950) / <alpha-value>)',
+              900: 'rgb(var(--color-zinc-900) / <alpha-value>)',
+              850: 'rgb(var(--color-zinc-850) / <alpha-value>)',
+              800: 'rgb(var(--color-zinc-800) / <alpha-value>)',
+              750: 'rgb(var(--color-zinc-750) / <alpha-value>)',
+              700: 'rgb(var(--color-zinc-700) / <alpha-value>)',
+              600: 'rgb(var(--color-zinc-600) / <alpha-value>)',
+              500: 'rgb(var(--color-zinc-500) / <alpha-value>)',
+              400: 'rgb(var(--color-zinc-400) / <alpha-value>)',
+              300: 'rgb(var(--color-zinc-300) / <alpha-value>)',
+              200: 'rgb(var(--color-zinc-200) / <alpha-value>)',
+              100: 'rgb(var(--color-zinc-100) / <alpha-value>)'
             }
           }
         }
@@ -72,11 +86,11 @@
             <h1 class="text-sm sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5 truncate">
               SnackVault <span class="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">3 Partners</span>
             </h1>
-            <p class="hidden sm:block text-xs text-zinc-400">Aryan • Vinay • Divyan (Maggi & Snacks Store)</p>
+            <p class="hidden sm:block text-xs text-zinc-400">Aryan • Vinay • Divyan (Store)</p>
           </div>
         </div>
 
-        <!-- Right Side: DB Cloud Badge, Phone Link & Active Partner Switcher -->
+        <!-- Right Side: DB Cloud Badge, Phone Link, Theme Toggle & Active Partner Switcher -->
         <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           
           <!-- Cloud Supabase Status Badge -->
@@ -89,6 +103,11 @@
           <button id="wifiShareBtn" class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-300 border border-zinc-700 transition" title="Phone Link">
             <i class="fa-solid fa-wifi text-emerald-400"></i>
             <span class="hidden md:inline">Phone Link</span>
+          </button>
+
+          <!-- Theme Toggle Button (Dark / Light Mode) -->
+          <button id="themeToggleBtn" class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 transition shadow-sm active:scale-95 shrink-0" title="Switch Theme (Light / Dark Mode)" aria-label="Toggle Theme">
+            <i id="themeToggleIcon" class="fa-solid fa-sun text-amber-400 text-sm transition-transform duration-300"></i>
           </button>
 
           <!-- Current Active Partner Selector -->
@@ -106,6 +125,16 @@
               </div>
               <div id="userListContainer" class="space-y-1">
                 <!-- Dynamically populated partners -->
+              </div>
+              
+              <!-- Direct Theme Selector in Dropdown -->
+              <div class="mt-2 pt-2 border-t border-zinc-800 flex items-center justify-between px-2 py-1">
+                <span class="text-xs font-semibold text-zinc-400 flex items-center gap-1.5">
+                  <i class="fa-solid fa-circle-half-stroke text-amber-400"></i> Theme
+                </span>
+                <button type="button" onclick="toggleTheme()" class="text-xs font-bold px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-750 text-zinc-200 border border-zinc-700 transition flex items-center gap-1">
+                  <span id="dropdownThemeLabel">Dark 🌙</span>
+                </button>
               </div>
             </div>
           </div>
