@@ -612,8 +612,10 @@ function renderProfitCharts() {
             backgroundColor: 'rgba(239, 68, 68, 0.85)',
             hoverBackgroundColor: '#ef4444',
             borderColor: '#ef4444',
-            borderWidth: 1,
-            borderRadius: 4
+            borderWidth: 1.5,
+            borderRadius: 4,
+            categoryPercentage: 0.75,
+            barPercentage: 0.88
           },
           {
             label: 'Vinay',
@@ -621,8 +623,10 @@ function renderProfitCharts() {
             backgroundColor: 'rgba(59, 130, 246, 0.85)',
             hoverBackgroundColor: '#3b82f6',
             borderColor: '#3b82f6',
-            borderWidth: 1,
-            borderRadius: 4
+            borderWidth: 1.5,
+            borderRadius: 4,
+            categoryPercentage: 0.75,
+            barPercentage: 0.88
           },
           {
             label: 'Divyan',
@@ -630,17 +634,23 @@ function renderProfitCharts() {
             backgroundColor: 'rgba(16, 185, 129, 0.85)',
             hoverBackgroundColor: '#10b981',
             borderColor: '#10b981',
-            borderWidth: 1,
-            borderRadius: 4
+            borderWidth: 1.5,
+            borderRadius: 4,
+            categoryPercentage: 0.75,
+            barPercentage: 0.88
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
         scales: {
           x: {
-            stacked: true,
+            stacked: false,
             grid: {
               color: gridColor,
               drawBorder: false
@@ -651,7 +661,7 @@ function renderProfitCharts() {
             }
           },
           y: {
-            stacked: true,
+            stacked: false,
             beginAtZero: true,
             grid: {
               color: gridColor,
