@@ -1,5 +1,5 @@
 // ==============================================================================
-// SnackVault - Aryan, Vinay & Divyan Ka Stock Tracker
+// SnackVault - Aryan, Vinay & Divyan Stock Tracker
 // ==============================================================================
 
 const state = {
@@ -308,7 +308,7 @@ function populateUserSelects() {
   if (ownerSel) {
     ownerSel.innerHTML = state.users.map(u => `
       <option value="${escapeHtml(u.name)}" ${state.activeUser?.name === u.name ? 'selected' : ''}>
-        ${u.avatar} ${escapeHtml(u.name)} Ka Stock
+        ${u.avatar} ${escapeHtml(u.name)}'s Stock
       </option>
     `).join('');
   }
@@ -320,7 +320,7 @@ function populateCategoryDropdowns() {
 
   if (filterSel) {
     filterSel.innerHTML = `
-      <option value="all">Sabhi Categories (All)</option>
+      <option value="all">All Categories</option>
       ${state.categories.map(c => `<option value="${escapeHtml(c.name)}">${c.icon} ${escapeHtml(c.name)}</option>`).join('')}
     `;
   }
@@ -491,14 +491,14 @@ function openAddItemForPartner(partnerName) {
   }
   const badge = document.getElementById('addItemOwnerBadge');
   if (badge) {
-    badge.textContent = `Adding to: ${partnerName} Ka Stock`;
+    badge.textContent = `Adding to: ${partnerName}'s Stock`;
   }
   openModal('addItemModal');
 }
 
 function handleItemClick(itemId, itemName, buyPrice, ownerName, quantity) {
   if (quantity <= 0) {
-    showToast(`"${itemName}" khatam hai! Restock karein 🛒`, 'error');
+    showToast(`"${itemName}" is out of stock! Please restock 🛒`, 'error');
     openRestockModal(itemId, itemName);
     return;
   }
@@ -603,9 +603,9 @@ function renderItemsGrid() {
       ? partnerItems.map(item => renderCompactItemRow(item)).join('')
       : `
         <div class="text-center py-8 px-3 text-zinc-500 bg-zinc-800/20 rounded-xl border border-dashed border-zinc-800 my-2">
-          <p class="text-xs font-semibold">${searchTerm ? `"${escapeHtml(searchTerm)}" nahi mila` : 'Koi item nahi hai'}</p>
+          <p class="text-xs font-semibold">${searchTerm ? `No items found for "${escapeHtml(searchTerm)}"` : 'No items in stock'}</p>
           <button onclick="openAddItemForPartner('${partner.name}')" class="mt-2 text-xs font-bold text-amber-400 hover:underline">
-            + ${partner.name} ke stock mein item jodein
+            + Add item to ${partner.name}'s stock
           </button>
         </div>
       `;
@@ -622,9 +622,9 @@ function renderItemsGrid() {
             <div class="min-w-0">
               <div class="flex items-center gap-1.5">
                 <h3 class="text-sm sm:text-base font-black text-white truncate">
-                  ${partner.name} Ka Stock
+                  ${partner.name}'s Stock
                 </h3>
-                ${isCurrentUser ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-black uppercase tracking-wider shrink-0">Aapka</span>` : ''}
+                ${isCurrentUser ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-black uppercase tracking-wider shrink-0">Yours</span>` : ''}
               </div>
               <p class="text-[11px] text-zinc-400 font-semibold mt-0.5 flex items-center gap-1.5">
                 <span>${partnerItems.length} items</span>
@@ -635,7 +635,7 @@ function renderItemsGrid() {
           </div>
 
           <!-- Quick Add Button for this Partner -->
-          <button onclick="openAddItemForPartner('${partner.name}')" class="px-2.5 py-1 text-xs font-bold rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition flex items-center gap-1 active:scale-95 shrink-0 shadow-sm" title="${partner.name} ke stock mein item jodein">
+          <button onclick="openAddItemForPartner('${partner.name}')" class="px-2.5 py-1 text-xs font-bold rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition flex items-center gap-1 active:scale-95 shrink-0 shadow-sm" title="Add item to ${partner.name}'s stock">
             <i class="fa-solid fa-plus text-[10px] text-amber-400"></i>
             <span class="text-[11px] font-bold">Item</span>
           </button>
@@ -663,19 +663,19 @@ function renderCompactItemRow(item) {
   
   if (isOut) {
     qtyBadgeClass = 'bg-red-500/15 text-red-400 border-red-500/40';
-    qtyText = '0 Khatam';
+    qtyText = 'Out of Stock';
   } else if (isLow) {
     qtyBadgeClass = 'bg-amber-500/15 text-amber-400 border-amber-500/40';
-    qtyText = `${item.quantity} bache`;
+    qtyText = `${item.quantity} left`;
   }
 
   return `
     <div 
       class="compact-item-row group rounded-xl p-2 sm:p-2.5 flex items-center justify-between gap-2 cursor-pointer transition ${isOut ? 'opacity-60' : ''}"
       onclick="handleItemClick(${item.id}, '${escapeHtml(item.name)}', ${item.buy_price || 0}, '${escapeHtml(item.owner_name || 'Aryan')}', ${item.quantity})"
-      title="Click karein bechne ke liye (Sell)"
+      title="Click to sell"
     >
-      <!-- Left: Category Icon, Name, Kharid Rate -->
+      <!-- Left: Category Icon, Name, Cost Price -->
       <div class="flex items-center gap-2 min-w-0 pr-1">
         <span class="text-base sm:text-lg shrink-0">${categoryIcon}</span>
         <div class="min-w-0">
@@ -690,22 +690,22 @@ function renderCompactItemRow(item) {
         </div>
       </div>
 
-      <!-- Right: Quantity Pill, Becho Button, Quick Adjust Controls -->
+      <!-- Right: Quantity Pill, Sell Button, Quick Adjust Controls -->
       <div class="flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
         <!-- Compact Quantity Pill -->
         <span id="itemQty-${item.id}" class="px-2 py-0.5 rounded-lg text-[11px] font-black border ${qtyBadgeClass} shrink-0 transition-transform">
           ${qtyText}
         </span>
 
-        <!-- Becho Button -->
+        <!-- Sell Button -->
         <button 
           onclick="openSellModal(${item.id}, '${escapeHtml(item.name)}', ${item.buy_price || 0}, '${escapeHtml(item.owner_name || 'Aryan')}')" 
           class="px-2 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-[11px] transition shadow-sm active:scale-95 flex items-center gap-1 shrink-0 ${isOut ? 'opacity-30 cursor-not-allowed' : ''}"
           ${isOut ? 'disabled' : ''}
-          title="Bikri daam daal kar becho"
+          title="Sell this item"
         >
           <span>💰</span>
-          <span>Becho</span>
+          <span>Sell</span>
         </button>
 
         <!-- Micro Quick Stock Adjust: -1 & +1 -->
@@ -713,14 +713,14 @@ function renderCompactItemRow(item) {
           onclick="quickAdjustStock(${item.id}, -1, '${escapeHtml(item.name)}', event)" 
           class="w-6 h-6 rounded-lg bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 border border-zinc-700 text-zinc-300 text-xs font-black transition flex items-center justify-center active:scale-90 shrink-0 ${isOut ? 'opacity-30 cursor-not-allowed' : ''}" 
           ${isOut ? 'disabled' : ''} 
-          title="1 packet kam karo"
+          title="Decrease 1 packet"
         >
           -
         </button>
         <button 
           onclick="quickAdjustStock(${item.id}, 1, '${escapeHtml(item.name)}', event)" 
           class="w-6 h-6 rounded-lg bg-zinc-800 hover:bg-emerald-500/20 hover:text-emerald-400 border border-zinc-700 text-zinc-300 text-xs font-black transition flex items-center justify-center active:scale-90 shrink-0" 
-          title="1 packet badhao"
+          title="Increase 1 packet"
         >
           +
         </button>
@@ -773,8 +773,8 @@ async function quickAdjustStock(itemId, delta, itemName, event) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Stock update failed');
 
-    const actionText = delta > 0 ? `+${delta} packet badhaya` : `${Math.abs(delta)} packet kam kiya`;
-    showToast(`${userName} ne "${itemName}" ${actionText} (${data.new_quantity} bache) 📦`, 'info');
+    const actionText = delta > 0 ? `+${delta} packet added` : `${Math.abs(delta)} packet removed`;
+    showToast(`${userName} ${actionText} for "${itemName}" (${data.new_quantity} left) 📦`, 'info');
     await refreshAllData();
   } catch (err) {
     showToast(err.message, 'error');
@@ -816,7 +816,7 @@ function renderActivity() {
   if (!container) return;
 
   if (state.activity.length === 0) {
-    container.innerHTML = `<div class="text-center py-6 text-zinc-500 text-xs">Koi activity record nahi hai.</div>`;
+    container.innerHTML = `<div class="text-center py-6 text-zinc-500 text-xs">No activity recorded yet.</div>`;
     return;
   }
 
@@ -860,7 +860,7 @@ function renderShoppingList() {
   if (state.shopping.length === 0) {
     container.innerHTML = `
       <div class="text-center py-6 text-zinc-500 text-xs">
-        Dukaan se laane ke liye koi item pending nahi hai! 🎉
+        No pending items to restock! 🎉
       </div>
     `;
     return;
@@ -881,7 +881,7 @@ function renderShoppingList() {
             <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
               <span>Qty: ${s.quantity} ${s.unit}</span>
               <span>•</span>
-              <span>Lana hai: ${escapeHtml(s.added_by)}</span>
+              <span>Added by: ${escapeHtml(s.added_by)}</span>
             </div>
           </div>
         </div>
@@ -911,7 +911,7 @@ function renderHisabKitab() {
     if (!settlements || settlements.length === 0) {
       settContainer.innerHTML = `
         <div class="col-span-full p-3 bg-zinc-800/50 rounded-xl text-center text-xs text-emerald-400 font-semibold border border-emerald-500/20">
-          🎉 Sabhi 3 doston ka dukaan hisab barabar hai!
+          🎉 All 3 roommates are settled up!
         </div>
       `;
     } else {
@@ -919,7 +919,7 @@ function renderHisabKitab() {
         <div class="p-2.5 bg-zinc-800 rounded-xl border border-zinc-700 flex items-center justify-between">
           <div class="flex items-center gap-1.5">
             <span class="text-xs font-bold text-red-400">${escapeHtml(s.from)}</span>
-            <span class="text-[11px] text-zinc-400">&rarr; gives &rarr;</span>
+            <span class="text-[11px] text-zinc-400">&rarr; owes &rarr;</span>
             <span class="text-xs font-bold text-emerald-400">${escapeHtml(s.to)}</span>
           </div>
           <span class="text-xs font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/30">
@@ -939,8 +939,8 @@ function renderHisabKitab() {
       const badge = isZero
         ? `<span class="text-zinc-400 font-bold">Settled (₹0.00)</span>`
         : isPositive
-        ? `<span class="text-emerald-400 font-bold">+₹${b.net_balance.toFixed(2)} (Lena hai)</span>`
-        : `<span class="text-red-400 font-bold">-₹${Math.abs(b.net_balance).toFixed(2)} (Dena hai)</span>`;
+        ? `<span class="text-emerald-400 font-bold">+₹${b.net_balance.toFixed(2)} (To Receive)</span>`
+        : `<span class="text-red-400 font-bold">-₹${Math.abs(b.net_balance).toFixed(2)} (To Pay)</span>`;
 
       return `
         <tr class="hover:bg-zinc-800/40 transition">
@@ -962,18 +962,18 @@ function renderHisabKitab() {
 // ------------------------------------------------------------------------------
 function openSellModal(itemId, itemName, buyPrice = 0, ownerName = 'Aryan') {
   document.getElementById('sellItemId').value = itemId;
-  document.getElementById('sellModalTitle').textContent = `Becho: ${itemName}`;
+  document.getElementById('sellModalTitle').textContent = `Sell: ${itemName}`;
   document.getElementById('sellAmount').value = 1;
   
-  // Set Kharid Rate reference
+  // Set Cost Price reference
   const buyPriceEl = document.getElementById('sellBuyPrice');
   if (buyPriceEl) buyPriceEl.value = buyPrice;
 
-  // Clear Bikri Rate so user enters how much it was sold for
+  // Clear Selling Price so user enters how much it was sold for
   const sellPriceInput = document.getElementById('sellPricePerUnit');
   if (sellPriceInput) {
     sellPriceInput.value = '';
-    sellPriceInput.placeholder = buyPrice > 0 ? `Kitne ka becha (Kharid: ₹${buyPrice})` : 'Bikri daam (₹/pkt)';
+    sellPriceInput.placeholder = buyPrice > 0 ? `Selling price (Cost: ₹${buyPrice})` : 'Selling price (₹/pkt)';
   }
 
   // Clear typed cash received
@@ -1037,9 +1037,9 @@ function updateSellProfitDisplay() {
   }
   if (formulaEl) {
     if (cashReceived > 0) {
-      formulaEl.textContent = `(Cash ₹${cashReceived.toFixed(1)} - Kharid ₹${costBasis.toFixed(1)})`;
+      formulaEl.textContent = `(Cash ₹${cashReceived.toFixed(1)} - Cost ₹${costBasis.toFixed(1)})`;
     } else {
-      formulaEl.textContent = `(Kharid cost: ₹${costBasis.toFixed(1)})`;
+      formulaEl.textContent = `(Cost price: ₹${costBasis.toFixed(1)})`;
     }
   }
 }
@@ -1054,7 +1054,7 @@ function openRestockModal(itemId, itemName) {
 }
 
 async function deleteItemConfirm(itemId, itemName) {
-  if (!confirm(`Kya sach mein "${itemName}" ko stock se delete karna hai?`)) return;
+  if (!confirm(`Are you sure you want to delete "${itemName}" from stock?`)) return;
   try {
     const res = await fetch(`/api/items/${itemId}`, { method: 'DELETE' });
     if (res.ok) {
@@ -1133,7 +1133,7 @@ function setupEventListeners() {
   }
   document.addEventListener('click', () => toggleUserDropdown(false));
 
-  // Add Item Open Button (Name, Kharid Rate, Quantity only)
+  // Add Item Open Button (Name, Cost Price, Quantity only)
   document.getElementById('openAddItemBtn')?.addEventListener('click', () => {
     document.getElementById('newItemName').value = '';
     const buyInput = document.getElementById('newItemBuyPrice');
@@ -1145,7 +1145,7 @@ function setupEventListeners() {
     }
     const badge = document.getElementById('addItemOwnerBadge');
     if (badge && state.activeUser) {
-      badge.textContent = `Adding to: ${state.activeUser.avatar} ${state.activeUser.name} Ka Stock`;
+      badge.textContent = `Adding to: ${state.activeUser.avatar} ${state.activeUser.name}'s Stock`;
     }
     openModal('addItemModal');
   });
@@ -1168,7 +1168,7 @@ function setupEventListeners() {
     });
   });
 
-  // Form: Add Custom Item (Only Name, Kharid Rate, Quantity & Partner)
+  // Form: Add Custom Item (Only Name, Cost Price, Quantity & Partner)
   document.getElementById('addItemForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('newItemName').value.trim();
@@ -1205,7 +1205,7 @@ function setupEventListeners() {
           owner_id,
           buy_price: buyPrice,
           sell_price: buyPrice,
-          notes: `${owner_name} ka stock`,
+          notes: `${owner_name}'s stock`,
           low_stock_threshold: 3
         })
       });
@@ -1213,7 +1213,7 @@ function setupEventListeners() {
       if (!res.ok) throw new Error(data.error || 'Failed to add item');
 
       closeAllModals();
-      showToast(`🎉 "${name}" (${quantity} pkts @ Kharid: ₹${buyPrice}) added to ${owner_name}'s stock!`, 'success');
+      showToast(`🎉 "${name}" (${quantity} pkts @ Cost: ₹${buyPrice}) added to ${owner_name}'s stock!`, 'success');
       if (typeof confetti === 'function') {
         confetti({
           particleCount: 40,
@@ -1228,7 +1228,7 @@ function setupEventListeners() {
     }
   });
 
-  // Form: Sell Item (Bikri with Custom Cash Received & Live Profit Calculation)
+  // Form: Sell Item (Sales with Custom Cash Received & Live Profit Calculation)
   document.getElementById('sellAmount')?.addEventListener('input', updateAutoSellCash);
   document.getElementById('sellPricePerUnit')?.addEventListener('input', updateAutoSellCash);
   document.getElementById('sellBuyPrice')?.addEventListener('input', updateSellProfitDisplay);
@@ -1327,7 +1327,7 @@ function setupEventListeners() {
     }
   });
 
-  // Form: Add Expense / Dukaan Bill
+  // Form: Add Expense / Store Bill
   document.getElementById('addExpenseBtn')?.addEventListener('click', () => {
     populateUserSelects();
     openModal('addExpenseModal');
@@ -1351,14 +1351,14 @@ function setupEventListeners() {
       if (!res.ok) throw new Error(data.error || 'Failed to add bill');
 
       closeAllModals();
-      showToast(`Kharid Bill Recorded: ₹${amount.toFixed(2)}`, 'success');
+      showToast(`Bill Recorded: ₹${amount.toFixed(2)}`, 'success');
       await refreshAllData();
     } catch (err) {
       showToast(err.message, 'error');
     }
   });
 
-  // Form: Shopping / Dukaan List
+  // Form: Shopping / Restock List
   document.getElementById('addShoppingForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = document.getElementById('shoppingInput');
@@ -1379,7 +1379,7 @@ function setupEventListeners() {
       });
       if (res.ok) {
         input.value = '';
-        showToast(`Added to Dukaan List: "${itemName}"`, 'info');
+        showToast(`Added to Restock List: "${itemName}"`, 'info');
         await loadShopping();
       }
     } catch (err) {
@@ -1395,7 +1395,7 @@ function setupEventListeners() {
     const url = document.getElementById('wifiShareUrl')?.textContent;
     if (url) {
       navigator.clipboard.writeText(url);
-      showToast('Link copied! WhatsApp group pe share karo.', 'success');
+      showToast('Link copied! Share it on WhatsApp.', 'success');
     }
   });
 }

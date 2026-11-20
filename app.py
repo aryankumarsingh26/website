@@ -170,7 +170,7 @@ def sell_item(item_id):
     })
 
 # ------------------------------------------------------------------------------
-# RESTOCK Action (Brought fresh stock from dukaan)
+# RESTOCK Action (Brought fresh stock from store)
 # ------------------------------------------------------------------------------
 @app.route("/api/items/<int:item_id>/restock", methods=["POST"])
 def restock_item(item_id):

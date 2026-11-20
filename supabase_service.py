@@ -236,7 +236,7 @@ def add_item(data):
                 "item_name": name,
                 "quantity_change": quantity,
                 "cost": buy_price * quantity if buy_price > 0 else 0.0,
-                "notes": f"{owner_name} added {quantity} {unit} of '{name}' (Dukaan Buy: ₹{buy_price}, Sell: ₹{sell_price})"
+                "notes": f"{owner_name} added {quantity} {unit} of '{name}' (Cost: ₹{buy_price}, Sell: ₹{sell_price})"
             }).execute()
             return item_id
         except Exception as e:
@@ -354,7 +354,7 @@ def sell_item(item_id, amount, custom_sell_price, seller_id, seller_name, custom
     unpacked = unpack_item(item)
     current_qty = unpacked["quantity"]
     if current_qty < amount:
-        return False, f"Not enough stock! Sirf {current_qty} {unpacked['unit']} bache hain.", 0, 0, 0.0, 0.0
+        return False, f"Not enough stock! Only {current_qty} {unpacked['unit']} available.", 0, 0, 0.0, 0.0
 
     new_qty = current_qty - amount
     
@@ -505,7 +505,7 @@ def restock_item(item_id, amount, buy_cost, user_id, user_name, notes=""):
                 supabase_client.table("expenses").insert({
                     "payer_id": user_id,
                     "payer_name": user_name,
-                    "title": f"Dukaan se laya: {amount} {unpacked['unit']} {unpacked['name']}",
+                    "title": f"Restocked: {amount} {unpacked['unit']} of {unpacked['name']}",
                     "amount": buy_cost,
                     "notes": notes
                 }).execute()
@@ -527,7 +527,7 @@ def restock_item(item_id, amount, buy_cost, user_id, user_name, notes=""):
         conn.execute("""
             INSERT INTO expenses (payer_id, payer_name, title, amount, notes)
             VALUES (?, ?, ?, ?, ?)
-        """, (user_id, user_name, f"Dukaan se laya: {amount} {unpacked['unit']} {unpacked['name']}", buy_cost, notes))
+        """, (user_id, user_name, f"Restocked: {amount} {unpacked['unit']} of {unpacked['name']}", buy_cost, notes))
 
     conn.execute("UPDATE shopping_list SET status = 'bought' WHERE item_name = ? AND status = 'pending'", (unpacked["name"],))
     conn.commit()
@@ -535,7 +535,7 @@ def restock_item(item_id, amount, buy_cost, user_id, user_name, notes=""):
     return True, None, new_qty
 
 # ------------------------------------------------------------------------------
-# Quick Stock Adjustment (+1 or -1 without Bikri / Sales formality)
+# Quick Stock Adjustment (+1 or -1 direct button)
 # ------------------------------------------------------------------------------
 def adjust_stock(item_id, delta, user_id=1, user_name="Partner"):
     delta = int(delta)
@@ -564,7 +564,7 @@ def adjust_stock(item_id, delta, user_id=1, user_name="Partner"):
     current_qty = unpacked["quantity"]
     new_qty = current_qty + delta
     if new_qty < 0:
-        return False, f"Stock 0 se kam nahi ho sakta! Abhi {current_qty} bache hain.", current_qty
+        return False, f"Stock cannot be less than 0! Currently {current_qty} left.", current_qty
 
     packed = pack_notes(
         owner_name=unpacked["owner_name"],
@@ -575,8 +575,8 @@ def adjust_stock(item_id, delta, user_id=1, user_name="Partner"):
         text=unpacked["display_notes"]
     )
 
-    action_text = f"kam kiya ({delta})" if delta < 0 else f"badhaya (+{delta})"
-    log_note = f"{user_name} ne '{unpacked['name']}' ka stock {action_text}. Ab {new_qty} {unpacked['unit']} bache hain."
+    action_text = f"decreased ({delta})" if delta < 0 else f"increased (+{delta})"
+    log_note = f"{user_name} {action_text} stock for '{unpacked['name']}'. Remaining: {new_qty} {unpacked['unit']}."
 
     if IS_SUPABASE_ENABLED:
         try:
