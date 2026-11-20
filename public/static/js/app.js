@@ -77,6 +77,7 @@ function applyTheme(theme) {
     }
   }
   localStorage.setItem('snack_theme', theme);
+  renderProfitCharts();
 }
 
 function toggleTheme() {
@@ -470,6 +471,229 @@ function renderStats() {
   if (aryanBadge) aryanBadge.textContent = `${partnerSales.Aryan?.sold || 0} sold`;
   if (vinayBadge) vinayBadge.textContent = `${partnerSales.Vinay?.sold || 0} sold`;
   if (divyanBadge) divyanBadge.textContent = `${partnerSales.Divyan?.sold || 0} sold`;
+
+  // Render Interactive Profit Pie & Bar Charts
+  renderProfitCharts();
+}
+
+// ------------------------------------------------------------------------------
+// Interactive Profit Analytics Charts (Chart.js: Pie + Daily Timeline Bar)
+// ------------------------------------------------------------------------------
+let profitPieChartInstance = null;
+let profitBarChartInstance = null;
+
+function renderProfitCharts() {
+  if (typeof Chart === 'undefined') return;
+
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#e4e4e7' : '#1e293b';
+  const mutedTextColor = isDark ? '#a1a1aa' : '#64748b';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.07)';
+
+  const aryanProfit = Number(state.stats.aryan_profit || 0);
+  const vinayProfit = Number(state.stats.vinay_profit || 0);
+  const divyanProfit = Number(state.stats.divyan_profit || 0);
+  const totalProfit = Number(state.stats.total_profit || (aryanProfit + vinayProfit + divyanProfit));
+
+  // Update Pie Legend Percentages & Center Total
+  const aryanPct = totalProfit > 0 ? Math.round((aryanProfit / totalProfit) * 100) : 0;
+  const vinayPct = totalProfit > 0 ? Math.round((vinayProfit / totalProfit) * 100) : 0;
+  const divyanPct = totalProfit > 0 ? Math.max(0, 100 - aryanPct - vinayPct) : 0;
+
+  const elAryanPct = document.getElementById('pieAryanPct');
+  const elVinayPct = document.getElementById('pieVinayPct');
+  const elDivyanPct = document.getElementById('pieDivyanPct');
+  const elCenterTotal = document.getElementById('pieCenterTotal');
+
+  if (elAryanPct) elAryanPct.textContent = `${aryanPct}% (₹${aryanProfit.toFixed(0)})`;
+  if (elVinayPct) elVinayPct.textContent = `${vinayPct}% (₹${vinayProfit.toFixed(0)})`;
+  if (elDivyanPct) elDivyanPct.textContent = `${divyanPct}% (₹${divyanProfit.toFixed(0)})`;
+  if (elCenterTotal) elCenterTotal.textContent = `₹${totalProfit.toFixed(2)}`;
+
+  // ----------------------------------------------------------------------------
+  // 1. Partner Profit Pie / Doughnut Chart
+  // ----------------------------------------------------------------------------
+  const pieCanvas = document.getElementById('partnerProfitPieChart');
+  if (pieCanvas) {
+    if (profitPieChartInstance) {
+      profitPieChartInstance.destroy();
+    }
+
+    const hasProfits = totalProfit > 0;
+    const pieData = hasProfits 
+      ? [aryanProfit, vinayProfit, divyanProfit] 
+      : [1, 1, 1];
+    const pieColors = hasProfits
+      ? ['#ef4444', '#3b82f6', '#10b981']
+      : (isDark ? ['#3f3f46', '#27272a', '#52525b'] : ['#e2e8f0', '#cbd5e1', '#94a3b8']);
+
+    profitPieChartInstance = new Chart(pieCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['Aryan', 'Vinay', 'Divyan'],
+        datasets: [{
+          data: pieData,
+          backgroundColor: pieColors,
+          borderColor: isDark ? '#18181b' : '#ffffff',
+          borderWidth: 2,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: isDark ? 'rgba(24, 24, 27, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            titleColor: isDark ? '#ffffff' : '#0f172a',
+            bodyColor: isDark ? '#e4e4e7' : '#334155',
+            borderColor: isDark ? '#3f3f46' : '#cbd5e1',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 10,
+            callbacks: {
+              label: function(ctx) {
+                if (!hasProfits) return ' No profit recorded yet';
+                const val = Number(ctx.raw || 0);
+                const pct = totalProfit > 0 ? Math.round((val / totalProfit) * 100) : 0;
+                return ` ${ctx.label}: ₹${val.toFixed(2)} (${pct}%)`;
+              }
+            }
+          }
+        },
+        animation: {
+          duration: 750,
+          animateScale: true,
+          animateRotate: true
+        }
+      }
+    });
+  }
+
+  // ----------------------------------------------------------------------------
+  // 2. Daily Profit Timeline Bar Chart (Y: Profit ₹, X: Date)
+  // ----------------------------------------------------------------------------
+  const barCanvas = document.getElementById('dailyProfitBarChart');
+  if (barCanvas) {
+    if (profitBarChartInstance) {
+      profitBarChartInstance.destroy();
+    }
+
+    const dailyProfits = state.stats.daily_profits || [];
+
+    const displayDaily = dailyProfits.length > 0 ? dailyProfits : [
+      { date: new Date().toISOString().slice(0, 10), total: 0, Aryan: 0, Vinay: 0, Divyan: 0 }
+    ];
+
+    // Format dates for X-Axis (e.g. 2026-11-18 -> "18 Nov")
+    const labels = displayDaily.map(d => {
+      try {
+        const parts = d.date.split('-');
+        if (parts.length === 3) {
+          const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+          return dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        }
+        return d.date;
+      } catch (e) {
+        return d.date;
+      }
+    });
+
+    profitBarChartInstance = new Chart(barCanvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Aryan',
+            data: displayDaily.map(d => d.Aryan || 0),
+            backgroundColor: 'rgba(239, 68, 68, 0.85)',
+            hoverBackgroundColor: '#ef4444',
+            borderColor: '#ef4444',
+            borderWidth: 1,
+            borderRadius: 4
+          },
+          {
+            label: 'Vinay',
+            data: displayDaily.map(d => d.Vinay || 0),
+            backgroundColor: 'rgba(59, 130, 246, 0.85)',
+            hoverBackgroundColor: '#3b82f6',
+            borderColor: '#3b82f6',
+            borderWidth: 1,
+            borderRadius: 4
+          },
+          {
+            label: 'Divyan',
+            data: displayDaily.map(d => d.Divyan || 0),
+            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+            hoverBackgroundColor: '#10b981',
+            borderColor: '#10b981',
+            borderWidth: 1,
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true,
+            grid: {
+              color: gridColor,
+              drawBorder: false
+            },
+            ticks: {
+              color: mutedTextColor,
+              font: { weight: 'bold', size: 10 }
+            }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            grid: {
+              color: gridColor,
+              drawBorder: false
+            },
+            ticks: {
+              color: mutedTextColor,
+              font: { weight: 'bold', size: 10 },
+              callback: function(val) {
+                return '₹' + val;
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: isDark ? 'rgba(24, 24, 27, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            titleColor: isDark ? '#ffffff' : '#0f172a',
+            bodyColor: isDark ? '#e4e4e7' : '#334155',
+            borderColor: isDark ? '#3f3f46' : '#cbd5e1',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 10,
+            callbacks: {
+              label: function(ctx) {
+                const val = Number(ctx.raw || 0);
+                return ` ${ctx.dataset.label}: ₹${val.toFixed(2)}`;
+              },
+              footer: function(tooltipItems) {
+                const total = tooltipItems.reduce((acc, curr) => acc + Number(curr.raw || 0), 0);
+                return `Total Day Profit: ₹${total.toFixed(2)}`;
+              }
+            }
+          }
+        },
+        animation: {
+          duration: 750
+        }
+      }
+    });
+  }
 }
 
 // Helper to get lively category icon

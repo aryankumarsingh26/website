@@ -650,6 +650,9 @@ def get_stats():
         "Divyan": {"sold": 0, "revenue": 0.0, "profit": 0.0}
     }
 
+    # Daily profit breakdown for bar chart (X: date, Y: profit)
+    daily_map = {}
+
     for s in sales:
         raw_user = (s.get("user_name") or "Aryan").strip()
         # Normalize partner name casing
@@ -682,7 +685,24 @@ def get_stats():
         partner_sales[norm_user]["profit"] = round(partner_sales[norm_user]["profit"] + profit, 2)
         total_profit += profit
 
+        # Group by date YYYY-MM-DD
+        created_at_str = str(s.get("created_at") or "")
+        date_key = created_at_str[:10] if len(created_at_str) >= 10 else ""
+        if date_key:
+            if date_key not in daily_map:
+                daily_map[date_key] = {
+                    "date": date_key,
+                    "total": 0.0,
+                    "Aryan": 0.0,
+                    "Vinay": 0.0,
+                    "Divyan": 0.0
+                }
+            daily_map[date_key]["total"] = round(daily_map[date_key]["total"] + profit, 2)
+            if norm_user in daily_map[date_key]:
+                daily_map[date_key][norm_user] = round(daily_map[date_key][norm_user] + profit, 2)
+
     total_profit = round(total_profit, 2)
+    sorted_daily_profits = [daily_map[k] for k in sorted(daily_map.keys())]
 
     return {
         "total_stock": total_stock,
@@ -696,7 +716,8 @@ def get_stats():
         "aryan_profit": partner_sales.get("Aryan", {}).get("profit", 0.0),
         "vinay_profit": partner_sales.get("Vinay", {}).get("profit", 0.0),
         "divyan_profit": partner_sales.get("Divyan", {}).get("profit", 0.0),
-        "partner_sales": partner_sales
+        "partner_sales": partner_sales,
+        "daily_profits": sorted_daily_profits
     }
 
 def get_activity(limit=40):

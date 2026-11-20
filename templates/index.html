@@ -17,6 +17,8 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <!-- Canvas Confetti for lively celebration effects -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <!-- Chart.js for lively interactive profit pie & bar charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   
   <!-- Early Theme Boot Script to prevent flicker -->
   <script>
@@ -304,6 +306,72 @@
             <span id="statDivyanProfit" class="text-base sm:text-xl font-black text-white">₹0.00</span>
           </div>
         </div>
+      </div>
+
+      <!-- Profit Analytics Visualizer (Pie Chart + Date Timeline Bar Chart) -->
+      <div class="mt-4 pt-3.5 border-t border-zinc-800/90 grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
+        
+        <!-- 1. Pie Chart: Profit Breakdown by Partner -->
+        <div class="lg:col-span-5 bg-zinc-800/50 border border-zinc-700/60 rounded-xl p-3 sm:p-3.5 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-sm">🥧</span>
+              <h4 class="text-xs font-bold text-white uppercase tracking-wider">Partner Profit Share</h4>
+            </div>
+            <span class="text-[10px] text-zinc-400 font-semibold px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-700/60">Pie Chart</span>
+          </div>
+          
+          <div class="relative w-full h-44 sm:h-48 flex items-center justify-center">
+            <canvas id="partnerProfitPieChart"></canvas>
+            <!-- Center Total Text for Doughnut Style -->
+            <div id="pieCenterLabel" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+              <span class="text-[9px] uppercase tracking-wider text-zinc-400 font-bold">Total</span>
+              <span id="pieCenterTotal" class="text-sm sm:text-base font-black text-emerald-400">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Bottom Legend Chips -->
+          <div class="flex items-center justify-around gap-1 pt-2.5 border-t border-zinc-700/50 text-[10px] font-bold mt-2">
+            <span class="flex items-center gap-1 text-red-400">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span> Aryan: <span id="pieAryanPct">0%</span>
+            </span>
+            <span class="flex items-center gap-1 text-blue-400">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span> Vinay: <span id="pieVinayPct">0%</span>
+            </span>
+            <span class="flex items-center gap-1 text-emerald-400">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Divyan: <span id="pieDivyanPct">0%</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- 2. Bar Chart: Daily Profit Timeline (Y: Profit ₹, X: Date) -->
+        <div class="lg:col-span-7 bg-zinc-800/50 border border-zinc-700/60 rounded-xl p-3 sm:p-3.5 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-sm">📊</span>
+              <h4 class="text-xs font-bold text-white uppercase tracking-wider">Daily Profit Timeline</h4>
+            </div>
+            <div class="flex items-center gap-1.5 text-[10px] text-zinc-400">
+              <span class="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700/80 font-mono text-[9px] text-emerald-400">Y: Profit (₹)</span>
+              <span class="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700/80 font-mono text-[9px] text-amber-400">X: Date</span>
+            </div>
+          </div>
+
+          <div class="relative w-full h-44 sm:h-48">
+            <canvas id="dailyProfitBarChart"></canvas>
+          </div>
+
+          <!-- Bottom Legend / Info -->
+          <div class="flex items-center justify-between pt-2.5 border-t border-zinc-700/50 text-[10px] text-zinc-400 font-semibold mt-2">
+            <span>📅 Timeline of sales profit</span>
+            <div class="flex items-center gap-2 font-bold">
+              <span class="flex items-center gap-1 text-red-400"><span class="w-2 h-2 rounded bg-red-500"></span> Aryan</span>
+              <span class="flex items-center gap-1 text-blue-400"><span class="w-2 h-2 rounded bg-blue-500"></span> Vinay</span>
+              <span class="flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded bg-emerald-500"></span> Divyan</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
