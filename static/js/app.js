@@ -717,21 +717,53 @@ function getCategoryIcon(catName) {
   return '📦';
 }
 
+function selectAddItemPartner(partnerName) {
+  const hiddenInput = document.getElementById('newItemOwnerSelect');
+  if (hiddenInput) hiddenInput.value = partnerName;
+
+  const configs = {
+    Aryan: {
+      label: "🦁 Aryan's Stock",
+      active: 'bg-red-500/20 text-red-400 border-red-500 shadow-md shadow-red-500/20 ring-1 ring-red-500/40 font-black'
+    },
+    Vinay: {
+      label: "💼 Vinay's Stock",
+      active: 'bg-blue-500/20 text-blue-400 border-blue-500 shadow-md shadow-blue-500/20 ring-1 ring-blue-500/40 font-black'
+    },
+    Divyan: {
+      label: "🚀 Divyan's Stock",
+      active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500 shadow-md shadow-emerald-500/20 ring-1 ring-emerald-500/40 font-black'
+    }
+  };
+
+  const inactive = 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200 font-bold';
+
+  ['Aryan', 'Vinay', 'Divyan'].forEach(name => {
+    const btn = document.getElementById(`addPartnerPill-${name}`);
+    if (btn) {
+      if (name.toLowerCase() === partnerName.toLowerCase()) {
+        btn.className = `partner-select-pill p-2 sm:p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${configs[name]?.active || ''}`;
+      } else {
+        btn.className = `partner-select-pill p-2 sm:p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${inactive}`;
+      }
+    }
+  });
+
+  const label = document.getElementById('selectedPartnerLabel');
+  if (label && configs[partnerName]) {
+    label.textContent = configs[partnerName].label;
+  }
+}
+
 function openAddItemForPartner(partnerName) {
   document.getElementById('newItemName').value = '';
   const buyInput = document.getElementById('newItemBuyPrice');
   if (buyInput) buyInput.value = '';
   document.getElementById('newItemQuantity').value = '';
   
-  const ownerSel = document.getElementById('newItemOwnerSelect');
-  if (ownerSel) {
-    ownerSel.value = partnerName;
-  }
-  const badge = document.getElementById('addItemOwnerBadge');
-  if (badge) {
-    badge.textContent = `Adding to: ${partnerName}'s Stock`;
-  }
+  selectAddItemPartner(partnerName);
   openModal('addItemModal');
+  setTimeout(() => document.getElementById('newItemName')?.focus(), 150);
 }
 
 function handleItemClick(itemId, itemName, buyPrice, ownerName, quantity) {
@@ -1565,21 +1597,16 @@ function setupEventListeners() {
   }
   document.addEventListener('click', () => toggleUserDropdown(false));
 
-  // Add Item Open Button (Name, Cost Price, Quantity only)
+  // Add Item Open Button
   document.getElementById('openAddItemBtn')?.addEventListener('click', () => {
     document.getElementById('newItemName').value = '';
     const buyInput = document.getElementById('newItemBuyPrice');
     if (buyInput) buyInput.value = '';
     document.getElementById('newItemQuantity').value = '';
-    const ownerSelect = document.getElementById('newItemOwnerSelect');
-    if (ownerSelect && state.activeUser) {
-      ownerSelect.value = state.activeUser.name;
-    }
-    const badge = document.getElementById('addItemOwnerBadge');
-    if (badge && state.activeUser) {
-      badge.textContent = `Adding to: ${state.activeUser.avatar} ${state.activeUser.name}'s Stock`;
-    }
+    const defaultOwner = state.activeUser ? state.activeUser.name : 'Aryan';
+    selectAddItemPartner(defaultOwner);
     openModal('addItemModal');
+    setTimeout(() => document.getElementById('newItemName')?.focus(), 150);
   });
 
   // Search & Category Filters (Instant Live Filtering Across 3 Partner Cards)

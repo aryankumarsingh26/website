@@ -538,37 +538,52 @@
         <span class="text-2xl sm:text-3xl">📦</span>
         <div>
           <h3 class="text-base sm:text-lg font-bold text-white">Add New Item</h3>
-          <p class="text-[11px] text-amber-400 font-semibold" id="addItemOwnerBadge">Adding to: Aryan's Stock</p>
+          <p class="text-[11px] text-zinc-400">Choose partner stock and enter item details</p>
         </div>
       </div>
       <form id="addItemForm" class="space-y-3.5">
-        <!-- 1. Item Name -->
+        <!-- Hidden input storing selected partner name -->
+        <input type="hidden" id="newItemOwnerSelect" value="Aryan" />
+
+        <!-- 1. Whose Stock to Add to? (3 Quick Partner Buttons) -->
+        <div>
+          <label class="block text-xs font-bold text-zinc-300 mb-1.5 flex items-center justify-between">
+            <span>Whose stock to add to? *</span>
+            <span class="text-[11px] text-amber-400 font-extrabold" id="selectedPartnerLabel">🦁 Aryan's Stock</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2" id="addItemPartnerPills">
+            <button type="button" onclick="selectAddItemPartner('Aryan')" id="addPartnerPill-Aryan" class="partner-select-pill p-2 sm:p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-red-500/20 text-red-400 border-red-500 shadow-md shadow-red-500/20 ring-1 ring-red-500/40 font-black">
+              <span class="text-xl">🦁</span>
+              <span class="text-xs font-black">Aryan</span>
+            </button>
+            <button type="button" onclick="selectAddItemPartner('Vinay')" id="addPartnerPill-Vinay" class="partner-select-pill p-2 sm:p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200 font-bold">
+              <span class="text-xl">💼</span>
+              <span class="text-xs font-black">Vinay</span>
+            </button>
+            <button type="button" onclick="selectAddItemPartner('Divyan')" id="addPartnerPill-Divyan" class="partner-select-pill p-2 sm:p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200 font-bold">
+              <span class="text-xl">🚀</span>
+              <span class="text-xs font-black">Divyan</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Item Name -->
         <div>
           <label class="block text-xs font-semibold text-zinc-300 mb-1">Item Name *</label>
           <input type="text" id="newItemName" placeholder="Eg: Maggi, Kurkure, Yippee, Bourbon" required class="w-full bg-zinc-800 text-sm px-3.5 py-2.5 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500 font-semibold placeholder-zinc-500" />
         </div>
         
-        <!-- 2. Cost Price (Purchase Cost per packet) -->
+        <!-- 3. Cost Price (Purchase Cost per packet) -->
         <div>
           <label class="block text-xs font-semibold text-zinc-300 mb-1">Cost Price (₹/pkt) *</label>
           <input type="number" step="0.5" min="0" id="newItemBuyPrice" placeholder="Eg: 10 or 15 (Purchase cost per packet)" required class="w-full bg-zinc-800 text-sm px-3.5 py-2.5 rounded-xl border border-zinc-700 text-amber-400 font-bold focus:outline-none focus:border-amber-500 placeholder-zinc-500" />
           <p class="text-[10px] text-zinc-400 mt-1">💡 Enter selling price when you make a sale.</p>
         </div>
 
-        <!-- 3. Item Quantity -->
+        <!-- 4. Item Quantity -->
         <div>
           <label class="block text-xs font-semibold text-zinc-300 mb-1">Item Quantity *</label>
           <input type="number" min="1" id="newItemQuantity" placeholder="Eg: 12" required class="w-full bg-zinc-800 text-sm px-3.5 py-2.5 rounded-xl border border-zinc-700 text-white font-bold focus:outline-none focus:border-amber-500 placeholder-zinc-500" />
-        </div>
-
-        <!-- 4. Partner Owner Selector -->
-        <div>
-          <label class="block text-xs font-semibold text-zinc-300 mb-1">Whose Stock? (Partner) *</label>
-          <select id="newItemOwnerSelect" class="w-full bg-zinc-800 text-xs sm:text-sm px-3 py-2.5 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-amber-500 font-bold">
-            <option value="Aryan">🦁 Aryan's Stock</option>
-            <option value="Vinay">💼 Vinay's Stock</option>
-            <option value="Divyan">🚀 Divyan's Stock</option>
-          </select>
         </div>
 
         <button type="submit" class="w-full py-2.5 mt-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-sm shadow-md transition active:scale-98">
