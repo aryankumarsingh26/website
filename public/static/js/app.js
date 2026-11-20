@@ -468,124 +468,280 @@ function renderStats() {
   if (divyanBadge) divyanBadge.textContent = `${partnerSales.Divyan?.sold || 0} sold`;
 }
 
+// Helper to get lively category icon
+function getCategoryIcon(catName) {
+  const lower = (catName || '').toLowerCase();
+  if (lower.includes('maggi') || lower.includes('noodle') || lower.includes('yippee') || lower.includes('wai wai')) return '🍜';
+  if (lower.includes('biscuit') || lower.includes('bourbon') || lower.includes('bakery') || lower.includes('cookie')) return '🍪';
+  if (lower.includes('chips') || lower.includes('kurkure') || lower.includes('tedhe')) return '🍟';
+  if (lower.includes('drink') || lower.includes('coke') || lower.includes('pepsi') || lower.includes('juice')) return '🥤';
+  if (lower.includes('snack') || lower.includes('namkeen')) return '🍿';
+  return '📦';
+}
+
+function openAddItemForPartner(partnerName) {
+  document.getElementById('newItemName').value = '';
+  const buyInput = document.getElementById('newItemBuyPrice');
+  if (buyInput) buyInput.value = '';
+  document.getElementById('newItemQuantity').value = '';
+  
+  const ownerSel = document.getElementById('newItemOwnerSelect');
+  if (ownerSel) {
+    ownerSel.value = partnerName;
+  }
+  const badge = document.getElementById('addItemOwnerBadge');
+  if (badge) {
+    badge.textContent = `Adding to: ${partnerName} Ka Stock`;
+  }
+  openModal('addItemModal');
+}
+
+function handleItemClick(itemId, itemName, buyPrice, ownerName, quantity) {
+  if (quantity <= 0) {
+    showToast(`"${itemName}" khatam hai! Restock karein 🛒`, 'error');
+    openRestockModal(itemId, itemName);
+    return;
+  }
+  openSellModal(itemId, itemName, buyPrice, ownerName);
+}
+
+function toggleItemMenu(event, itemId) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById(`itemMenu-${itemId}`);
+  const isHidden = menu?.classList.contains('hidden');
+  document.querySelectorAll('[id^="itemMenu-"]').forEach(m => m.classList.add('hidden'));
+  if (menu && isHidden) {
+    menu.classList.remove('hidden');
+  }
+}
+
 // ------------------------------------------------------------------------------
-// Render Items Grid (Custom Items, Stock & Partner Ownership with Lively Glow)
+// Render Items Grid: 3 Dedicated Partner Cards with Compact Stock Lists
 // ------------------------------------------------------------------------------
 function renderItemsGrid() {
   const container = document.getElementById('itemsGrid');
   const emptyState = document.getElementById('itemsEmptyState');
   if (!container) return;
 
-  let filtered = [...state.items];
+  const searchTerm = (document.getElementById('inventorySearch')?.value || '').trim().toLowerCase();
+  const categoryTerm = document.getElementById('categoryFilter')?.value || 'all';
 
-  // Filter by owner
-  if (state.activeOwnerFilter === 'my' && state.activeUser) {
-    filtered = filtered.filter(i => (i.owner_name || '').toLowerCase() === state.activeUser.name.toLowerCase());
-  } else if (state.activeOwnerFilter !== 'all') {
-    filtered = filtered.filter(i => (i.owner_name || '').toLowerCase() === state.activeOwnerFilter.toLowerCase());
-  }
+  // Filter items by search & category
+  let filtered = state.items.filter(item => {
+    const matchesSearch = !searchTerm || 
+      item.name.toLowerCase().includes(searchTerm) || 
+      (item.category && item.category.toLowerCase().includes(searchTerm)) ||
+      (item.owner_name && item.owner_name.toLowerCase().includes(searchTerm));
+    const matchesCategory = categoryTerm === 'all' || item.category === categoryTerm;
+    return matchesSearch && matchesCategory;
+  });
 
-  if (filtered.length === 0) {
+  if (state.items.length === 0) {
     container.innerHTML = '';
     if (emptyState) emptyState.classList.remove('hidden');
     return;
   }
-
   if (emptyState) emptyState.classList.add('hidden');
 
-  const ownerColors = {
-    aryan: { badge: 'bg-red-500/20 text-red-400 border-red-500/30', icon: '🦁', glowClass: 'owner-glow-aryan', topStripe: 'from-red-500 to-rose-600' },
-    vinay: { badge: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: '💼', glowClass: 'owner-glow-vinay', topStripe: 'from-blue-500 to-cyan-500' },
-    divyan: { badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: '🚀', glowClass: 'owner-glow-divyan', topStripe: 'from-emerald-500 to-teal-400' }
-  };
+  // Define the 3 Partners with their distinct styles
+  const partnerConfig = [
+    {
+      name: 'Aryan',
+      avatar: '🦁',
+      cardClass: 'card-border-aryan',
+      badgeClass: 'bg-red-500/20 text-red-400 border-red-500/40',
+      headerGradient: 'from-red-500/15 via-zinc-900 to-zinc-900',
+      accentColor: 'text-red-400',
+      topStripe: 'from-red-500 to-rose-600'
+    },
+    {
+      name: 'Vinay',
+      avatar: '💼',
+      cardClass: 'card-border-vinay',
+      badgeClass: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
+      headerGradient: 'from-blue-500/15 via-zinc-900 to-zinc-900',
+      accentColor: 'text-blue-400',
+      topStripe: 'from-blue-500 to-cyan-500'
+    },
+    {
+      name: 'Divyan',
+      avatar: '🚀',
+      cardClass: 'card-border-divyan',
+      badgeClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+      headerGradient: 'from-emerald-500/15 via-zinc-900 to-zinc-900',
+      accentColor: 'text-emerald-400',
+      topStripe: 'from-emerald-500 to-teal-400'
+    }
+  ];
 
-  container.innerHTML = filtered.map(item => {
-    const isOut = item.quantity === 0;
-    const isLow = item.quantity > 0 && item.quantity <= item.low_stock_threshold;
-    const ownerKey = (item.owner_name || 'aryan').toLowerCase();
-    const ownerStyle = ownerColors[ownerKey] || { badge: 'bg-zinc-800 text-zinc-300 border-zinc-700', icon: '👤', glowClass: '', topStripe: 'from-amber-500 to-orange-500' };
+  // Filter visible partner cards based on activeOwnerFilter
+  let visiblePartners = partnerConfig;
+  if (state.activeOwnerFilter === 'my' && state.activeUser) {
+    visiblePartners = partnerConfig.filter(p => p.name.toLowerCase() === state.activeUser.name.toLowerCase());
+  } else if (state.activeOwnerFilter !== 'all') {
+    visiblePartners = partnerConfig.filter(p => p.name.toLowerCase() === state.activeOwnerFilter.toLowerCase());
+  }
+  if (visiblePartners.length === 0) {
+    visiblePartners = partnerConfig;
+  }
 
-    const isMine = state.activeUser && (item.owner_name || '').toLowerCase() === state.activeUser.name.toLowerCase();
+  // Adjust responsive grid columns based on number of visible partner cards
+  if (visiblePartners.length === 1) {
+    container.className = 'grid grid-cols-1 max-w-2xl mx-auto gap-4 items-start';
+  } else if (visiblePartners.length === 2) {
+    container.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 items-start';
+  } else {
+    container.className = 'grid grid-cols-1 lg:grid-cols-3 gap-4 items-start';
+  }
+
+  container.innerHTML = visiblePartners.map(partner => {
+    const partnerItems = filtered.filter(i => (i.owner_name || '').toLowerCase() === partner.name.toLowerCase());
+    const totalPackets = partnerItems.reduce((acc, curr) => acc + (curr.quantity || 0), 0);
+    const isCurrentUser = state.activeUser && state.activeUser.name.toLowerCase() === partner.name.toLowerCase();
+
+    const itemsHtml = partnerItems.length > 0 
+      ? partnerItems.map(item => renderCompactItemRow(item)).join('')
+      : `
+        <div class="text-center py-8 px-3 text-zinc-500 bg-zinc-800/20 rounded-xl border border-dashed border-zinc-800 my-2">
+          <p class="text-xs font-semibold">${searchTerm ? `"${escapeHtml(searchTerm)}" nahi mila` : 'Koi item nahi hai'}</p>
+          <button onclick="openAddItemForPartner('${partner.name}')" class="mt-2 text-xs font-bold text-amber-400 hover:underline">
+            + ${partner.name} ke stock mein item jodein
+          </button>
+        </div>
+      `;
 
     return `
-      <div class="stock-card-wrapper ${ownerStyle.glowClass} ${isMine ? 'border-amber-500/50' : ''} ${isLow ? 'card-low-stock-pulse' : ''} ${isOut ? 'card-out-of-stock' : ''} rounded-2xl p-4 flex flex-col justify-between shadow-md card-entry transition relative">
+      <div class="partner-stock-card ${partner.cardClass} flex flex-col justify-between card-entry transition relative">
         <!-- Partner Top Accent Line -->
-        <div class="h-1 w-full absolute top-0 left-0 bg-gradient-to-r ${ownerStyle.topStripe}"></div>
+        <div class="h-1 w-full absolute top-0 left-0 bg-gradient-to-r ${partner.topStripe}"></div>
 
-        ${isMine ? `<span class="absolute top-2 right-3 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500 text-black shadow-sm uppercase tracking-wider">Aapka Stock</span>` : ''}
-        
-        <div class="pt-1">
-          <!-- Owner & Category Badges -->
-          <div class="flex items-center justify-between gap-1.5 mb-2">
-            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${ownerStyle.badge} flex items-center gap-1 shadow-sm">
-              <span>${ownerStyle.icon}</span> ${escapeHtml(item.owner_name || 'Common')}
-            </span>
-            <span class="text-[10px] font-semibold text-zinc-400 px-2 py-0.5 rounded-md bg-zinc-800 truncate max-w-[120px]">
-              ${escapeHtml(item.category)}
-            </span>
-          </div>
-
-          <!-- Item Name -->
-          <h4 class="text-sm font-extrabold text-white mt-1 leading-snug">${escapeHtml(item.name)}</h4>
-
-          <!-- Stock Quantity Display with Spring Punch ID -->
-          <div class="mt-3 flex items-baseline justify-between">
-            <div class="flex items-baseline gap-1.5">
-              <span id="itemQty-${item.id}" class="text-3xl font-black ${isOut ? 'text-red-500' : isLow ? 'text-amber-400' : 'text-white'} transition-colors">${item.quantity}</span>
-              <span class="text-xs text-zinc-400 font-bold">${escapeHtml(item.unit)}</span>
+        <!-- Partner Card Header -->
+        <div class="bg-gradient-to-r ${partner.headerGradient} p-3 sm:p-3.5 border-b border-zinc-800 flex items-center justify-between gap-2 pt-3.5">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-2xl sm:text-3xl shrink-0">${partner.avatar}</span>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-sm sm:text-base font-black text-white truncate">
+                  ${partner.name} Ka Stock
+                </h3>
+                ${isCurrentUser ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-black uppercase tracking-wider shrink-0">Aapka</span>` : ''}
+              </div>
+              <p class="text-[11px] text-zinc-400 font-semibold mt-0.5 flex items-center gap-1.5">
+                <span>${partnerItems.length} items</span>
+                <span>•</span>
+                <span class="font-extrabold ${partner.accentColor}">${totalPackets} pkts</span>
+              </p>
             </div>
-
-            ${isOut 
-              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/40 pulse-low-stock">Khatam</span>`
-              : isLow 
-              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1.5">
-                  <span class="relative flex h-1.5 w-1.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
-                  </span>
-                  Sirf ${item.quantity} bache!
-                 </span>`
-              : `<span class="text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span> In Stock
-                 </span>`
-            }
           </div>
 
-          <!-- Pricing Info: Kharid Rate Only -->
-          <div class="mt-2.5 p-2 bg-zinc-800/70 rounded-xl border border-zinc-800 text-xs flex items-center justify-between">
-            <span class="text-zinc-400 font-medium">Kharid Rate (Cost):</span>
-            <span class="text-amber-400 font-extrabold text-sm">₹${item.buy_price || 0} /pkt</span>
-          </div>
-
-          ${item.display_notes ? `<p class="mt-2 text-[11px] text-zinc-500 italic truncate">📍 ${escapeHtml(item.display_notes)}</p>` : ''}
+          <!-- Quick Add Button for this Partner -->
+          <button onclick="openAddItemForPartner('${partner.name}')" class="px-2.5 py-1 text-xs font-bold rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition flex items-center gap-1 active:scale-95 shrink-0 shadow-sm" title="${partner.name} ke stock mein item jodein">
+            <i class="fa-solid fa-plus text-[10px] text-amber-400"></i>
+            <span class="text-[11px] font-bold">Item</span>
+          </button>
         </div>
 
-        <!-- Action Buttons: SELL & RESTOCK / QUICK CONTROLS -->
-        <div class="mt-4 pt-3 border-t border-zinc-800 space-y-2">
-          <!-- Primary: Lively Becho Button (Opens modal to ask Bikri daam & calculate profit) -->
-          <button onclick="openSellModal(${item.id}, '${escapeHtml(item.name)}', ${item.buy_price || 0}, '${escapeHtml(item.owner_name || 'Aryan')}')" class="w-full py-2.5 px-3 btn-becho-lively text-black text-xs font-black rounded-xl transition shadow-md active:scale-95 flex items-center justify-center gap-1.5 btn-shimmer ${isOut ? 'opacity-40 cursor-not-allowed' : ''}" ${isOut ? 'disabled' : ''}>
-            <span class="text-sm">💰</span> Becho (Bikri Daam Daalo)
-          </button>
-
-          <!-- Secondary Row: -1, +1, Restock, Delete -->
-          <div class="flex items-center gap-1.5">
-            <button onclick="quickAdjustStock(${item.id}, -1, '${escapeHtml(item.name)}', event)" class="flex-1 py-1.5 px-2 bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 border border-zinc-700 text-zinc-300 text-xs font-bold rounded-xl transition active:scale-95 flex items-center justify-center gap-1 ${isOut ? 'opacity-40 cursor-not-allowed' : ''}" ${isOut ? 'disabled' : ''} title="1 packet kam karo">
-              - 1
-            </button>
-            <button onclick="quickAdjustStock(${item.id}, 1, '${escapeHtml(item.name)}', event)" class="flex-1 py-1.5 px-2 bg-zinc-800 hover:bg-emerald-500/20 hover:text-emerald-400 border border-zinc-700 text-zinc-300 text-xs font-bold rounded-xl transition active:scale-95 flex items-center justify-center gap-1" title="1 packet badhao">
-              + 1
-            </button>
-            <button onclick="openRestockModal(${item.id}, '${escapeHtml(item.name)}')" class="py-1.5 px-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-xs font-semibold rounded-xl transition active:scale-95 whitespace-nowrap" title="Dukaan se stock laya">
-              + Restock
-            </button>
-            <button onclick="deleteItemConfirm(${item.id}, '${escapeHtml(item.name)}')" class="w-8 h-8 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition flex items-center justify-center text-xs shrink-0" title="Delete">
-              <i class="fa-regular fa-trash-can"></i>
-            </button>
-          </div>
+        <!-- Items Compact List -->
+        <div class="p-2.5 sm:p-3 space-y-2 max-h-[560px] overflow-y-auto custom-scrollbar">
+          ${itemsHtml}
         </div>
       </div>
     `;
   }).join('');
+}
+
+// ------------------------------------------------------------------------------
+// Compact Item Row Component (Saves ~70% Screen Space & Supports Click-to-Sell)
+// ------------------------------------------------------------------------------
+function renderCompactItemRow(item) {
+  const isOut = item.quantity === 0;
+  const isLow = item.quantity > 0 && item.quantity <= item.low_stock_threshold;
+  const categoryIcon = getCategoryIcon(item.category);
+
+  let qtyBadgeClass = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+  let qtyText = `${item.quantity} ${item.unit || 'pkts'}`;
+  
+  if (isOut) {
+    qtyBadgeClass = 'bg-red-500/15 text-red-400 border-red-500/40';
+    qtyText = '0 Khatam';
+  } else if (isLow) {
+    qtyBadgeClass = 'bg-amber-500/15 text-amber-400 border-amber-500/40';
+    qtyText = `${item.quantity} bache`;
+  }
+
+  return `
+    <div 
+      class="compact-item-row group rounded-xl p-2 sm:p-2.5 flex items-center justify-between gap-2 cursor-pointer transition ${isOut ? 'opacity-60' : ''}"
+      onclick="handleItemClick(${item.id}, '${escapeHtml(item.name)}', ${item.buy_price || 0}, '${escapeHtml(item.owner_name || 'Aryan')}', ${item.quantity})"
+      title="Click karein bechne ke liye (Sell)"
+    >
+      <!-- Left: Category Icon, Name, Kharid Rate -->
+      <div class="flex items-center gap-2 min-w-0 pr-1">
+        <span class="text-base sm:text-lg shrink-0">${categoryIcon}</span>
+        <div class="min-w-0">
+          <h4 class="text-xs sm:text-sm font-bold text-white group-hover:text-amber-400 transition-colors truncate">
+            ${escapeHtml(item.name)}
+          </h4>
+          <div class="flex items-center gap-1.5 text-[10px] text-zinc-400 mt-0.5">
+            <span class="font-bold text-amber-400/90">₹${item.buy_price || 0}/pkt</span>
+            <span class="text-zinc-600 hidden sm:inline">•</span>
+            <span class="truncate max-w-[90px] text-zinc-400 hidden sm:inline">${escapeHtml(item.category)}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Quantity Pill, Becho Button, Quick Adjust Controls -->
+      <div class="flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
+        <!-- Compact Quantity Pill -->
+        <span id="itemQty-${item.id}" class="px-2 py-0.5 rounded-lg text-[11px] font-black border ${qtyBadgeClass} shrink-0 transition-transform">
+          ${qtyText}
+        </span>
+
+        <!-- Becho Button -->
+        <button 
+          onclick="openSellModal(${item.id}, '${escapeHtml(item.name)}', ${item.buy_price || 0}, '${escapeHtml(item.owner_name || 'Aryan')}')" 
+          class="px-2 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-[11px] transition shadow-sm active:scale-95 flex items-center gap-1 shrink-0 ${isOut ? 'opacity-30 cursor-not-allowed' : ''}"
+          ${isOut ? 'disabled' : ''}
+          title="Bikri daam daal kar becho"
+        >
+          <span>💰</span>
+          <span>Becho</span>
+        </button>
+
+        <!-- Micro Quick Stock Adjust: -1 & +1 -->
+        <button 
+          onclick="quickAdjustStock(${item.id}, -1, '${escapeHtml(item.name)}', event)" 
+          class="w-6 h-6 rounded-lg bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 border border-zinc-700 text-zinc-300 text-xs font-black transition flex items-center justify-center active:scale-90 shrink-0 ${isOut ? 'opacity-30 cursor-not-allowed' : ''}" 
+          ${isOut ? 'disabled' : ''} 
+          title="1 packet kam karo"
+        >
+          -
+        </button>
+        <button 
+          onclick="quickAdjustStock(${item.id}, 1, '${escapeHtml(item.name)}', event)" 
+          class="w-6 h-6 rounded-lg bg-zinc-800 hover:bg-emerald-500/20 hover:text-emerald-400 border border-zinc-700 text-zinc-300 text-xs font-black transition flex items-center justify-center active:scale-90 shrink-0" 
+          title="1 packet badhao"
+        >
+          +
+        </button>
+
+        <!-- Dropdown Menu for Restock & Delete -->
+        <div class="relative shrink-0">
+          <button onclick="toggleItemMenu(event, ${item.id})" class="w-6 h-6 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-700/60 flex items-center justify-center text-xs transition" title="Options">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+          </button>
+          <div id="itemMenu-${item.id}" class="hidden absolute right-0 top-full mt-1 w-28 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-1 z-30">
+            <button onclick="openRestockModal(${item.id}, '${escapeHtml(item.name)}'); toggleItemMenu(null, ${item.id})" class="w-full text-left px-2 py-1.5 rounded-lg text-[11px] font-semibold text-zinc-300 hover:text-white hover:bg-zinc-800 flex items-center gap-1.5">
+              <span>🛒</span> Restock
+            </button>
+            <button onclick="deleteItemConfirm(${item.id}, '${escapeHtml(item.name)}'); toggleItemMenu(null, ${item.id})" class="w-full text-left px-2 py-1.5 rounded-lg text-[11px] font-semibold text-red-400 hover:bg-red-500/20 flex items-center gap-1.5">
+              <i class="fa-regular fa-trash-can text-[10px]"></i> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // Quick Stock Adjustment (+1 or -1) with Lively Bubble Pop
@@ -983,6 +1139,10 @@ function setupEventListeners() {
     const buyInput = document.getElementById('newItemBuyPrice');
     if (buyInput) buyInput.value = '';
     document.getElementById('newItemQuantity').value = '';
+    const ownerSelect = document.getElementById('newItemOwnerSelect');
+    if (ownerSelect && state.activeUser) {
+      ownerSelect.value = state.activeUser.name;
+    }
     const badge = document.getElementById('addItemOwnerBadge');
     if (badge && state.activeUser) {
       badge.textContent = `Adding to: ${state.activeUser.avatar} ${state.activeUser.name} Ka Stock`;
@@ -990,9 +1150,13 @@ function setupEventListeners() {
     openModal('addItemModal');
   });
 
-  // Search & Category Filters
-  document.getElementById('inventorySearch')?.addEventListener('input', debounce(loadItems, 300));
-  document.getElementById('categoryFilter')?.addEventListener('change', loadItems);
+  // Search & Category Filters (Instant Live Filtering Across 3 Partner Cards)
+  document.getElementById('inventorySearch')?.addEventListener('input', () => {
+    renderItemsGrid();
+  });
+  document.getElementById('categoryFilter')?.addEventListener('change', () => {
+    renderItemsGrid();
+  });
 
   // Modals Close
   document.querySelectorAll('.modal-close-btn').forEach(btn => {
@@ -1004,15 +1168,16 @@ function setupEventListeners() {
     });
   });
 
-  // Form: Add Custom Item (Only Name, Kharid Rate, Quantity)
+  // Form: Add Custom Item (Only Name, Kharid Rate, Quantity & Partner)
   document.getElementById('addItemForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('newItemName').value.trim();
     const buyPrice = parseFloat(document.getElementById('newItemBuyPrice')?.value || 0);
     const quantity = parseInt(document.getElementById('newItemQuantity').value, 10);
 
-    const owner_name = state.activeUser ? state.activeUser.name : 'Aryan';
-    const owner_id = state.activeUser ? state.activeUser.id : 1;
+    const ownerSelect = document.getElementById('newItemOwnerSelect');
+    const owner_name = (ownerSelect ? ownerSelect.value : (state.activeUser ? state.activeUser.name : 'Aryan')) || 'Aryan';
+    const owner_id = state.users.find(u => u.name.toLowerCase() === owner_name.toLowerCase())?.id || 1;
 
     // Smart category auto-detection
     const nameLower = name.toLowerCase();

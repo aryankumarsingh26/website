@@ -438,6 +438,105 @@ button:active:not(:disabled) {
   animation: lowStockAuraPulse 2.2s infinite ease-in-out !important;
 }
 
+/* ==============================================================================
+   3-Partner Cards & Compact Stock Row Styling
+============================================================================== */
+.partner-stock-card {
+  background-color: var(--theme-card-bg);
+  border: 1px solid var(--theme-border);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+}
+
+.partner-stock-card:hover {
+  border-color: #495267;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.45);
+}
+
+.partner-stock-card.card-border-aryan {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+.partner-stock-card.card-border-aryan:hover {
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 0 12px 28px -6px rgba(239, 68, 68, 0.2) !important;
+}
+
+.partner-stock-card.card-border-vinay {
+  border-color: rgba(59, 130, 246, 0.35);
+}
+.partner-stock-card.card-border-vinay:hover {
+  border-color: rgba(59, 130, 246, 0.7) !important;
+  box-shadow: 0 12px 28px -6px rgba(59, 130, 246, 0.2) !important;
+}
+
+.partner-stock-card.card-border-divyan {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.partner-stock-card.card-border-divyan:hover {
+  border-color: rgba(16, 185, 129, 0.7) !important;
+  box-shadow: 0 12px 28px -6px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Compact Item Row Hover & Active State */
+.compact-item-row {
+  background-color: rgba(37, 41, 53, 0.65);
+  border: 1px solid rgba(53, 60, 77, 0.5);
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.compact-item-row:hover {
+  background-color: rgba(45, 51, 66, 0.95);
+  border-color: rgba(107, 118, 146, 0.7);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+}
+
+.compact-item-row:active {
+  transform: scale(0.99);
+}
+
+/* Custom mini scrollbar for partner cards */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(107, 118, 146, 0.4);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 118, 146, 0.7);
+}
+
+/* Light mode overrides for 3-partner cards */
+html:not(.dark) .partner-stock-card {
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04) !important;
+}
+html:not(.dark) .partner-stock-card.card-border-aryan {
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+html:not(.dark) .partner-stock-card.card-border-vinay {
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+html:not(.dark) .partner-stock-card.card-border-divyan {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+html:not(.dark) .compact-item-row {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html:not(.dark) .compact-item-row:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06) !important;
+}
+
 /* Out of Stock Border Dim */
 .card-out-of-stock {
   opacity: 0.65;
