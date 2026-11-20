@@ -189,6 +189,10 @@ async function refreshAllData() {
     loadShopping(),
     loadActivity()
   ]);
+  const combinedModal = document.getElementById('combinedStockModal');
+  if (combinedModal && !combinedModal.classList.contains('hidden')) {
+    renderCombinedStock();
+  }
 }
 
 async function loadStats() {
@@ -958,6 +962,200 @@ function renderHisabKitab() {
 }
 
 // ------------------------------------------------------------------------------
+// Combined Stock Modal (All 3 Partners Consolidated Stock View)
+// ------------------------------------------------------------------------------
+function openCombinedStockModal() {
+  const searchInput = document.getElementById('combinedModalSearch');
+  if (searchInput) searchInput.value = '';
+  renderCombinedStock();
+  openModal('combinedStockModal');
+  setTimeout(() => searchInput?.focus(), 150);
+}
+
+function renderCombinedStock() {
+  const container = document.getElementById('combinedItemsList');
+  if (!container) return;
+
+  const searchTerm = (document.getElementById('combinedModalSearch')?.value || '').trim().toLowerCase();
+
+  // Summary counts across all 3 partners
+  const totalPkts = state.stats.total_stock ?? state.items.reduce((acc, i) => acc + (i.quantity || 0), 0);
+  const aryanPkts = state.stats.aryan_stock ?? state.items.filter(i => (i.owner_name || '').toLowerCase() === 'aryan').reduce((acc, i) => acc + (i.quantity || 0), 0);
+  const vinayPkts = state.stats.vinay_stock ?? state.items.filter(i => (i.owner_name || '').toLowerCase() === 'vinay').reduce((acc, i) => acc + (i.quantity || 0), 0);
+  const divyanPkts = state.stats.divyan_stock ?? state.items.filter(i => (i.owner_name || '').toLowerCase() === 'divyan').reduce((acc, i) => acc + (i.quantity || 0), 0);
+
+  const elTotal = document.getElementById('combinedModalTotalPkts');
+  const elAryan = document.getElementById('combinedModalAryanPkts');
+  const elVinay = document.getElementById('combinedModalVinayPkts');
+  const elDivyan = document.getElementById('combinedModalDivyanPkts');
+
+  if (elTotal) elTotal.textContent = `${totalPkts} pkts`;
+  if (elAryan) elAryan.textContent = `${aryanPkts} pkts`;
+  if (elVinay) elVinay.textContent = `${vinayPkts} pkts`;
+  if (elDivyan) elDivyan.textContent = `${divyanPkts} pkts`;
+
+  // Group items across partners by normalized name
+  const groupMap = new Map();
+
+  state.items.forEach(item => {
+    const rawName = (item.name || '').trim();
+    if (!rawName) return;
+    const key = rawName.toLowerCase();
+
+    if (!groupMap.has(key)) {
+      groupMap.set(key, {
+        displayName: rawName,
+        category: item.category || 'Snacks',
+        unit: item.unit || 'packets',
+        totalQty: 0,
+        owners: {
+          Aryan: { qty: 0, buy_price: 0, id: null },
+          Vinay: { qty: 0, buy_price: 0, id: null },
+          Divyan: { qty: 0, buy_price: 0, id: null }
+        },
+        rawItems: []
+      });
+    }
+
+    const group = groupMap.get(key);
+    const qty = parseInt(item.quantity || 0, 10);
+    group.totalQty += qty;
+    group.rawItems.push(item);
+
+    const owner = (item.owner_name || '').trim();
+    const matchedOwner = ['Aryan', 'Vinay', 'Divyan'].find(o => o.toLowerCase() === owner.toLowerCase());
+    if (matchedOwner && group.owners[matchedOwner]) {
+      group.owners[matchedOwner].qty += qty;
+      group.owners[matchedOwner].buy_price = item.buy_price || 0;
+      if (!group.owners[matchedOwner].id || qty > 0) {
+        group.owners[matchedOwner].id = item.id;
+      }
+    }
+  });
+
+  let groups = Array.from(groupMap.values());
+
+  // Filter by search query
+  if (searchTerm) {
+    groups = groups.filter(g => 
+      g.displayName.toLowerCase().includes(searchTerm) || 
+      g.category.toLowerCase().includes(searchTerm)
+    );
+  }
+
+  // Sort: Items with stock first (highest total count first), then alphabetical
+  groups.sort((a, b) => {
+    if (a.totalQty > 0 && b.totalQty === 0) return -1;
+    if (a.totalQty === 0 && b.totalQty > 0) return 1;
+    if (b.totalQty !== a.totalQty) return b.totalQty - a.totalQty;
+    return a.displayName.localeCompare(b.displayName);
+  });
+
+  const countBadge = document.getElementById('combinedItemCountBadge');
+  if (countBadge) {
+    countBadge.textContent = `${groups.length} unique ${groups.length === 1 ? 'item' : 'items'}`;
+  }
+
+  if (groups.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-12 px-4 text-zinc-500 bg-zinc-800/20 rounded-2xl border border-dashed border-zinc-800">
+        <p class="text-xs font-semibold">${searchTerm ? `No combined items matching "${escapeHtml(searchTerm)}"` : 'No items found in stock.'}</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = groups.map(g => {
+    const isOut = g.totalQty === 0;
+    const categoryIcon = getCategoryIcon(g.category);
+
+    // Partner chips breakdown
+    const partnerChips = [];
+
+    if (g.owners.Aryan.qty > 0) {
+      partnerChips.push(`
+        <button 
+          onclick="event.stopPropagation(); closeAllModals(); openSellModal(${g.owners.Aryan.id}, '${escapeHtml(g.displayName)}', ${g.owners.Aryan.buy_price}, 'Aryan')"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition active:scale-95 cursor-pointer shadow-sm"
+          title="Aryan has ${g.owners.Aryan.qty} pkts (Click to sell)"
+        >
+          <span>🦁 Aryan:</span> <span class="font-black">${g.owners.Aryan.qty}</span>
+        </button>
+      `);
+    }
+
+    if (g.owners.Vinay.qty > 0) {
+      partnerChips.push(`
+        <button 
+          onclick="event.stopPropagation(); closeAllModals(); openSellModal(${g.owners.Vinay.id}, '${escapeHtml(g.displayName)}', ${g.owners.Vinay.buy_price}, 'Vinay')"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 transition active:scale-95 cursor-pointer shadow-sm"
+          title="Vinay has ${g.owners.Vinay.qty} pkts (Click to sell)"
+        >
+          <span>💼 Vinay:</span> <span class="font-black">${g.owners.Vinay.qty}</span>
+        </button>
+      `);
+    }
+
+    if (g.owners.Divyan.qty > 0) {
+      partnerChips.push(`
+        <button 
+          onclick="event.stopPropagation(); closeAllModals(); openSellModal(${g.owners.Divyan.id}, '${escapeHtml(g.displayName)}', ${g.owners.Divyan.buy_price}, 'Divyan')"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition active:scale-95 cursor-pointer shadow-sm"
+          title="Divyan has ${g.owners.Divyan.qty} pkts (Click to sell)"
+        >
+          <span>🚀 Divyan:</span> <span class="font-black">${g.owners.Divyan.qty}</span>
+        </button>
+      `);
+    }
+
+    const chipsHtml = partnerChips.length > 0 
+      ? partnerChips.join('') 
+      : `<span class="text-[11px] text-zinc-500 italic">0 in stock</span>`;
+
+    // Find first available partner item with stock to sell if row clicked
+    const firstInStock = g.rawItems.find(i => (i.quantity || 0) > 0) || g.rawItems[0];
+
+    return `
+      <div 
+        class="bg-zinc-800/70 hover:bg-zinc-800 border border-zinc-700/80 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${isOut ? 'opacity-50' : 'cursor-pointer'}"
+        ${firstInStock && !isOut ? `onclick="closeAllModals(); openSellModal(${firstInStock.id}, '${escapeHtml(g.displayName)}', ${firstInStock.buy_price || 0}, '${escapeHtml(firstInStock.owner_name || 'Aryan')}')"` : ''}
+        title="${!isOut ? 'Click to sell this item' : 'Out of stock'}"
+      >
+        <!-- Left: Category Icon, Name & Category -->
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-lg shrink-0">
+            ${categoryIcon}
+          </div>
+          <div class="min-w-0">
+            <h4 class="text-xs sm:text-sm font-bold text-white truncate flex items-center gap-2">
+              <span>${escapeHtml(g.displayName)}</span>
+            </h4>
+            <p class="text-[10px] text-zinc-400 mt-0.5">
+              ${escapeHtml(g.category)}
+            </p>
+          </div>
+        </div>
+
+        <!-- Center & Right: Partner Contributions & Total Count -->
+        <div class="flex items-center justify-between sm:justify-end gap-2.5 shrink-0" onclick="event.stopPropagation()">
+          <!-- Breakdown of who has how many -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            ${chipsHtml}
+          </div>
+
+          <!-- Grand Total Count Pill -->
+          <div class="text-right shrink-0 min-w-[70px]">
+            <span class="inline-block px-2.5 py-1 rounded-xl text-xs font-black border ${isOut ? 'bg-red-500/15 text-red-400 border-red-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'}">
+              ${isOut ? '0 pkts' : `${g.totalQty} pkts`}
+            </span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ------------------------------------------------------------------------------
 // Modal Openers & Actions
 // ------------------------------------------------------------------------------
 function openSellModal(itemId, itemName, buyPrice = 0, ownerName = 'Aryan') {
@@ -1156,6 +1354,11 @@ function setupEventListeners() {
   });
   document.getElementById('categoryFilter')?.addEventListener('change', () => {
     renderItemsGrid();
+  });
+
+  // Combined Stock Modal Search
+  document.getElementById('combinedModalSearch')?.addEventListener('input', () => {
+    renderCombinedStock();
   });
 
   // Modals Close

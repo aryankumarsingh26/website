@@ -153,8 +153,8 @@
     <!-- Top Key Metrics Cards (Clean 4-Column Stock Overview with Lively Glow) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
       
-      <!-- Combined Total Stock -->
-      <div id="stockCardTotal" class="partner-card-total rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer group" onclick="filterByOwner('all')" title="View All Stock">
+      <!-- Combined Total Stock (Click to view consolidated items popup) -->
+      <div id="stockCardTotal" class="partner-card-total rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-lg cursor-pointer group hover:scale-[1.02] active:scale-98 transition-all" onclick="openCombinedStockModal()" title="Click to view combined items and counts of all 3 partners">
         <div>
           <div class="flex items-center gap-1.5">
             <p class="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">Total Stock</p>
@@ -658,6 +658,82 @@
       <p class="text-[11px] text-zinc-500 mt-2.5">
         Share this link with Vinay & Divyan on WhatsApp!
       </p>
+    </div>
+  </div>
+
+  <!-- 5. Combined Stock Modal (All 3 Partners Items & Total Count Consolidated) -->
+  <div id="combinedStockModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-zinc-900 border border-zinc-700 rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl relative animate-in max-h-[90vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between gap-3 pb-3 border-b border-zinc-800 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-xl shadow-lg shadow-amber-500/20 shrink-0">
+            📦
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              Combined Store Inventory
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-extrabold border border-amber-500/30">3 Partners</span>
+            </h3>
+            <p class="text-xs text-zinc-400">Consolidated count of all items across Aryan, Vinay & Divyan</p>
+          </div>
+        </div>
+        <button class="modal-close-btn text-zinc-400 hover:text-white text-xl p-1 shrink-0">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Live Summary Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 my-3 shrink-0">
+        <div class="bg-zinc-800/80 border border-amber-500/30 rounded-xl p-2.5 text-center">
+          <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Total Packets</span>
+          <span id="combinedModalTotalPkts" class="text-lg sm:text-xl font-black text-white">0</span>
+        </div>
+        <div class="bg-zinc-800/80 border border-red-500/30 rounded-xl p-2.5 text-center">
+          <span class="text-[10px] font-bold text-red-400 uppercase tracking-wider block flex items-center justify-center gap-1">
+            <span>🦁</span> Aryan
+          </span>
+          <span id="combinedModalAryanPkts" class="text-lg sm:text-xl font-black text-white">0</span>
+        </div>
+        <div class="bg-zinc-800/80 border border-blue-500/30 rounded-xl p-2.5 text-center">
+          <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider block flex items-center justify-center gap-1">
+            <span>💼</span> Vinay
+          </span>
+          <span id="combinedModalVinayPkts" class="text-lg sm:text-xl font-black text-white">0</span>
+        </div>
+        <div class="bg-zinc-800/80 border border-emerald-500/30 rounded-xl p-2.5 text-center">
+          <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block flex items-center justify-center gap-1">
+            <span>🚀</span> Divyan
+          </span>
+          <span id="combinedModalDivyanPkts" class="text-lg sm:text-xl font-black text-white">0</span>
+        </div>
+      </div>
+
+      <!-- Search Input & Item Count Badge inside Modal -->
+      <div class="flex items-center gap-2 mb-3 shrink-0">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
+          <input type="text" id="combinedModalSearch" placeholder="Search combined items..." class="w-full bg-zinc-800 text-xs sm:text-sm pl-8 pr-3 py-2 rounded-xl border border-zinc-700 focus:outline-none focus:border-amber-500 text-white placeholder-zinc-500" />
+        </div>
+        <span id="combinedItemCountBadge" class="text-xs font-bold text-zinc-400 px-2.5 py-1.5 bg-zinc-800 rounded-xl border border-zinc-700 shrink-0">
+          0 items
+        </span>
+      </div>
+
+      <!-- Scrollable Combined Items List -->
+      <div id="combinedItemsList" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar min-h-[220px]">
+        <!-- Dynamically rendered combined items -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-3 mt-2 border-t border-zinc-800 flex items-center justify-between text-xs text-zinc-400 shrink-0">
+        <span class="text-[11px]">💡 Click any partner chip to sell that item</span>
+        <button type="button" class="modal-close-btn px-4 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-750 text-zinc-200 border border-zinc-700 font-bold transition">
+          Close
+        </button>
+      </div>
+
     </div>
   </div>
 
