@@ -497,12 +497,14 @@ button:active:not(:disabled) {
   transform: scale(0.99);
 }
 
-/* Custom mini scrollbar for partner cards */
+/* Custom mini scrollbar for partner cards & charts */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(107, 118, 146, 0.4);
@@ -510,6 +512,16 @@ button:active:not(:disabled) {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(107, 118, 146, 0.7);
+}
+
+/* Horizontal swipeable charts on touch devices */
+.chart-swipe-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
 }
 
 /* Light mode overrides for 3-partner cards */

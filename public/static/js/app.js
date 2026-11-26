@@ -579,6 +579,7 @@ function renderProfitCharts() {
   if (barCanvas) {
     if (profitBarChartInstance) {
       profitBarChartInstance.destroy();
+      profitBarChartInstance = null;
     }
 
     const dailyProfits = state.stats.daily_profits || [];
@@ -586,6 +587,40 @@ function renderProfitCharts() {
     const displayDaily = dailyProfits.length > 0 ? dailyProfits : [
       { date: new Date().toISOString().slice(0, 10), total: 0, Aryan: 0, Vinay: 0, Divyan: 0 }
     ];
+
+    // Responsive horizontal swipe/scroll calculation for mobile & multi-day timelines
+    const scrollOuter = document.getElementById('barChartOuterScroll');
+    const scrollInner = document.getElementById('barChartInnerWrapper');
+    const swipeIndicator = document.getElementById('chartSwipeIndicator');
+    const dateCountBadge = document.getElementById('chartDateCountBadge');
+
+    if (dateCountBadge) {
+      dateCountBadge.textContent = `${displayDaily.length} ${displayDaily.length === 1 ? 'day' : 'days'}`;
+    }
+
+    if (scrollOuter && scrollInner) {
+      const outerWidth = scrollOuter.clientWidth || 320;
+      // Guarantee each day has at least 68px width so 3 bars + labels remain wide, bold & readable
+      const minDayWidth = 68;
+      const targetWidth = Math.max(outerWidth, displayDaily.length * minDayWidth);
+      scrollInner.style.width = `${targetWidth}px`;
+
+      if (targetWidth > outerWidth + 8) {
+        if (swipeIndicator) {
+          swipeIndicator.classList.remove('hidden');
+          swipeIndicator.classList.add('inline-flex');
+        }
+        // Auto-scroll to latest dates (rightmost edge) so today's figures are instantly visible
+        requestAnimationFrame(() => {
+          scrollOuter.scrollLeft = scrollOuter.scrollWidth;
+        });
+      } else {
+        if (swipeIndicator) {
+          swipeIndicator.classList.add('hidden');
+          swipeIndicator.classList.remove('inline-flex');
+        }
+      }
+    }
 
     // Format dates for X-Axis (e.g. 2026-11-18 -> "18 Nov")
     const labels = displayDaily.map(d => {
@@ -614,8 +649,9 @@ function renderProfitCharts() {
             borderColor: '#ef4444',
             borderWidth: 1.5,
             borderRadius: 4,
-            categoryPercentage: 0.75,
-            barPercentage: 0.88
+            maxBarThickness: 24,
+            categoryPercentage: 0.78,
+            barPercentage: 0.9
           },
           {
             label: 'Vinay',
@@ -625,8 +661,9 @@ function renderProfitCharts() {
             borderColor: '#3b82f6',
             borderWidth: 1.5,
             borderRadius: 4,
-            categoryPercentage: 0.75,
-            barPercentage: 0.88
+            maxBarThickness: 24,
+            categoryPercentage: 0.78,
+            barPercentage: 0.9
           },
           {
             label: 'Divyan',
@@ -636,8 +673,9 @@ function renderProfitCharts() {
             borderColor: '#10b981',
             borderWidth: 1.5,
             borderRadius: 4,
-            categoryPercentage: 0.75,
-            barPercentage: 0.88
+            maxBarThickness: 24,
+            categoryPercentage: 0.78,
+            barPercentage: 0.9
           }
         ]
       },
@@ -657,7 +695,9 @@ function renderProfitCharts() {
             },
             ticks: {
               color: mutedTextColor,
-              font: { weight: 'bold', size: 10 }
+              font: { weight: 'bold', size: 10 },
+              maxRotation: 0,
+              autoSkip: false
             }
           },
           y: {
@@ -1862,6 +1902,11 @@ function setupEventListeners() {
       showToast('Link copied! Share it on WhatsApp.', 'success');
     }
   });
+
+  // Window resize handler to maintain responsive swipeable chart layout
+  window.addEventListener('resize', debounce(() => {
+    renderProfitCharts();
+  }, 200));
 }
 
 // ------------------------------------------------------------------------------
